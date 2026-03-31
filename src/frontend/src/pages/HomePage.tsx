@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { useNavigate } from "@tanstack/react-router";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import Header from "../components/Header";
@@ -16,24 +16,32 @@ const FALLBACK_TSHIRTS = [
     image: "/assets/generated/tshirt1.dim_600x600.jpg",
     name: "Classic Origins",
     description: "Clean white geometric tee — where it all began.",
+    price: "₹499",
+    deliveryCharge: "₹50",
   },
   {
     id: 2,
     image: "/assets/generated/tshirt2.dim_600x600.jpg",
     name: "Line Art",
     description: "Bold black abstract lines, minimal and striking.",
+    price: "₹499",
+    deliveryCharge: "₹50",
   },
   {
     id: 3,
     image: "/assets/generated/tshirt3.dim_600x600.jpg",
     name: "Bold Statement",
     description: "Oversized grey drop for the unapologetic.",
+    price: "₹599",
+    deliveryCharge: "₹50",
   },
   {
     id: 4,
     image: "/assets/generated/tshirt4.dim_600x600.jpg",
     name: "Summit",
     description: "Navy mountain tee — built for those who climb.",
+    price: "₹549",
+    deliveryCharge: "₹50",
   },
 ];
 
@@ -45,86 +53,25 @@ function buildWhatsappLink(number: string, designName: string) {
   return `https://wa.me/${clean}?text=${msg}`;
 }
 
-type SelectedDesign = { name: string; description: string; imgUrl: string };
-
-function DesignModal({
-  design,
-  whatsappNumber,
-  onClose,
-}: { design: SelectedDesign; whatsappNumber: string; onClose: () => void }) {
-  return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <motion.div
-          className="bg-card border border-border rounded-2xl overflow-hidden max-w-lg w-full shadow-2xl"
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex justify-end p-2 pb-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full p-1.5 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="px-4">
-            <img
-              src={design.imgUrl}
-              alt={design.name}
-              className="w-full h-72 object-cover rounded-xl"
-            />
-          </div>
-          <div className="p-4 pt-3">
-            <h3 className="font-display font-bold text-lg uppercase tracking-wide mb-1">
-              {design.name}
-            </h3>
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-              {design.description}
-            </p>
-            <a
-              href={buildWhatsappLink(whatsappNumber, design.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-ocid="designs.open_modal_button"
-              className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-3 rounded-full text-sm font-bold transition-colors shadow-lg"
-            >
-              <SiWhatsapp className="w-5 h-5" />
-              Order Now via WhatsApp
-            </a>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
 function TshirtCard({
   name,
   description,
   imageKey,
+  price,
+  deliveryCharge,
   index,
   whatsappNumber,
-  onImageClick,
 }: {
   name: string;
   description: string;
   imageKey: string;
+  price?: string;
+  deliveryCharge?: string;
   index: number;
   whatsappNumber: string;
-  onImageClick: (design: SelectedDesign) => void;
 }) {
   const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getAnonStorageClient().then((client) => {
@@ -134,6 +81,11 @@ function TshirtCard({
         .catch(() => {});
     });
   }, [imageKey]);
+
+  const priceLabel =
+    price && deliveryCharge
+      ? `${price} + ${deliveryCharge} delivery`
+      : (price ?? "");
 
   return (
     <motion.div
@@ -146,7 +98,12 @@ function TshirtCard({
         <button
           type="button"
           className="aspect-square overflow-hidden bg-muted relative w-full block cursor-pointer group"
-          onClick={() => imgUrl && onImageClick({ name, description, imgUrl })}
+          onClick={() =>
+            navigate({
+              to: "/design/$name",
+              params: { name: encodeURIComponent(name) },
+            })
+          }
           aria-label={`View ${name}`}
         >
           {imgUrl ? (
@@ -158,7 +115,7 @@ function TshirtCard({
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full">
-                  View Design
+                  View Details
                 </span>
               </div>
             </>
@@ -167,9 +124,14 @@ function TshirtCard({
           )}
         </button>
         <CardContent className="p-4">
-          <h3 className="font-display font-bold text-base uppercase tracking-wide mb-1">
+          <h3 className="font-display font-bold text-base uppercase tracking-wide mb-0.5">
             {name}
           </h3>
+          {priceLabel && (
+            <p className="text-foreground/80 text-xs font-semibold mb-1">
+              {priceLabel}
+            </p>
+          )}
           <p className="text-muted-foreground text-xs leading-relaxed mb-3">
             {description}
           </p>
@@ -193,21 +155,11 @@ export default function HomePage() {
   const { data: rawNumber } = useWhatsappNumber();
   const whatsappNumber = rawNumber ?? FALLBACK_NUMBER;
   const hasDynamic = tshirts && tshirts.length > 0;
-  const [selectedDesign, setSelectedDesign] = useState<SelectedDesign | null>(
-    null,
-  );
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-
-      {selectedDesign && (
-        <DesignModal
-          design={selectedDesign}
-          whatsappNumber={whatsappNumber}
-          onClose={() => setSelectedDesign(null)}
-        />
-      )}
 
       <main className="flex-1">
         <section
@@ -255,8 +207,8 @@ export default function HomePage() {
             Our Designs
           </h2>
           <p className="text-muted-foreground text-xs mb-10">
-            Click any design picture to view it, then tap "Order Now via
-            WhatsApp"
+            Click any design picture to view details and price, then order via
+            WhatsApp
           </p>
 
           {isLoading ? (
@@ -283,9 +235,10 @@ export default function HomePage() {
                   name={t.name}
                   description={t.description}
                   imageKey={t.imageKey}
+                  price={t.price}
+                  deliveryCharge={t.deliveryCharge}
                   index={i}
                   whatsappNumber={whatsappNumber}
-                  onImageClick={setSelectedDesign}
                 />
               ))}
             </div>
@@ -307,10 +260,9 @@ export default function HomePage() {
                       type="button"
                       className="aspect-square overflow-hidden relative w-full block cursor-pointer group"
                       onClick={() =>
-                        setSelectedDesign({
-                          name: tshirt.name,
-                          description: tshirt.description,
-                          imgUrl: tshirt.image,
+                        navigate({
+                          to: "/design/$name",
+                          params: { name: encodeURIComponent(tshirt.name) },
                         })
                       }
                       aria-label={`View ${tshirt.name}`}
@@ -322,14 +274,17 @@ export default function HomePage() {
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full">
-                          View Design
+                          View Details
                         </span>
                       </div>
                     </button>
                     <CardContent className="p-4">
-                      <h3 className="font-display font-bold text-base uppercase tracking-wide mb-1">
+                      <h3 className="font-display font-bold text-base uppercase tracking-wide mb-0.5">
                         {tshirt.name}
                       </h3>
+                      <p className="text-foreground/80 text-xs font-semibold mb-1">
+                        {tshirt.price} + {tshirt.deliveryCharge} delivery
+                      </p>
                       <p className="text-muted-foreground text-xs leading-relaxed mb-3">
                         {tshirt.description}
                       </p>

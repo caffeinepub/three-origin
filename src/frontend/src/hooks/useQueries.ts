@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ExternalBlob } from "../backend";
 import type { Tshirt } from "../backend.d";
 import { useActor } from "./useActor";
 
@@ -32,57 +33,10 @@ export function usePaymentQR() {
     queryKey: ["paymentQR"],
     queryFn: async () => {
       if (!actor) return "";
-      return actor.getPaymentQR();
+      const blob = await actor.getPaymentQR();
+      return blob.getDirectURL();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useIsAdmin() {
-  const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
-    queryKey: ["isAdmin"],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useClaimAdmin() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (secret: string) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor._initializeAccessControlWithSecret(secret);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["isAdmin"] }),
-  });
-}
-
-export function useClaimFirstAdmin() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error("Not authenticated");
-      return (actor as any).claimFirstAdmin();
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["isAdmin"] }),
-  });
-}
-
-export function useResetAdmin() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error("Not authenticated");
-      return (actor as any).resetAdmin();
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["isAdmin"] }),
   });
 }
 
@@ -126,9 +80,10 @@ export function useSetPaymentQR() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (url: string) => {
+    mutationFn: async (bytes: Uint8Array<ArrayBuffer>) => {
       if (!actor) throw new Error("Not authenticated");
-      return actor.setPaymentQR(url);
+      const blob = ExternalBlob.fromBytes(bytes);
+      return actor.setPaymentQR(blob);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentQR"] }),
   });

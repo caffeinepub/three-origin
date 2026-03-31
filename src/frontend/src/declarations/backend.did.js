@@ -20,9 +20,11 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
 export const Tshirt = IDL.Record({
+  'deliveryCharge' : IDL.Text,
   'name' : IDL.Text,
   'description' : IDL.Text,
   'imageKey' : IDL.Text,
+  'price' : IDL.Text,
 });
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
@@ -30,6 +32,7 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -64,7 +67,7 @@ export const idlService = IDL.Service({
   'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getPaymentQR' : IDL.Func([], [IDL.Text], ['query']),
+  'getPaymentQR' : IDL.Func([], [ExternalBlob], ['query']),
   'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -76,7 +79,7 @@ export const idlService = IDL.Service({
   'removeTshirt' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchTshirts' : IDL.Func([IDL.Text], [IDL.Vec(Tshirt)], ['query']),
-  'setPaymentQR' : IDL.Func([IDL.Text], [], []),
+  'setPaymentQR' : IDL.Func([ExternalBlob], [], []),
   'setWhatsappNumber' : IDL.Func([IDL.Text], [], []),
 });
 
@@ -95,9 +98,11 @@ export const idlFactory = ({ IDL }) => {
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
   const Tshirt = IDL.Record({
+    'deliveryCharge' : IDL.Text,
     'name' : IDL.Text,
     'description' : IDL.Text,
     'imageKey' : IDL.Text,
+    'price' : IDL.Text,
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
@@ -105,6 +110,7 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -139,7 +145,7 @@ export const idlFactory = ({ IDL }) => {
     'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getPaymentQR' : IDL.Func([], [IDL.Text], ['query']),
+    'getPaymentQR' : IDL.Func([], [ExternalBlob], ['query']),
     'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -151,7 +157,7 @@ export const idlFactory = ({ IDL }) => {
     'removeTshirt' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchTshirts' : IDL.Func([IDL.Text], [IDL.Vec(Tshirt)], ['query']),
-    'setPaymentQR' : IDL.Func([IDL.Text], [], []),
+    'setPaymentQR' : IDL.Func([ExternalBlob], [], []),
     'setWhatsappNumber' : IDL.Func([IDL.Text], [], []),
   });
 };

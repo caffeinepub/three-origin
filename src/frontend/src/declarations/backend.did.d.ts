@@ -10,10 +10,13 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type ExternalBlob = Uint8Array;
 export interface Tshirt {
+  'deliveryCharge' : string,
   'name' : string,
   'description' : string,
   'imageKey' : string,
+  'price' : string,
 }
 export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
@@ -52,7 +55,7 @@ export interface _SERVICE {
   'getAllTshirts' : ActorMethod<[], Array<Tshirt>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getPaymentQR' : ActorMethod<[], string>,
+  'getPaymentQR' : ActorMethod<[], ExternalBlob>,
   'getTshirt' : ActorMethod<[string], Tshirt>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWhatsappNumber' : ActorMethod<[], string>,
@@ -60,7 +63,7 @@ export interface _SERVICE {
   'removeTshirt' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchTshirts' : ActorMethod<[string], Array<Tshirt>>,
-  'setPaymentQR' : ActorMethod<[string], undefined>,
+  'setPaymentQR' : ActorMethod<[ExternalBlob], undefined>,
   'setWhatsappNumber' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
