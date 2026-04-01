@@ -2,11 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import Header from "../components/Header";
 import { useAllTshirts, useWhatsappNumber } from "../hooks/useQueries";
-import { getAnonStorageClient } from "../hooks/useStorageClient";
 
 const FALLBACK_NUMBER = "919876543210";
 
@@ -70,17 +68,7 @@ function TshirtCard({
   index: number;
   whatsappNumber: string;
 }) {
-  const [imgUrl, setImgUrl] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    getAnonStorageClient().then((client) => {
-      client
-        .getDirectURL(imageKey)
-        .then(setImgUrl)
-        .catch(() => {});
-    });
-  }, [imageKey]);
 
   const priceLabel =
     price && deliveryCharge
@@ -106,10 +94,10 @@ function TshirtCard({
           }
           aria-label={`View ${name}`}
         >
-          {imgUrl ? (
+          {imageKey ? (
             <>
               <img
-                src={imgUrl}
+                src={imageKey}
                 alt={name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />

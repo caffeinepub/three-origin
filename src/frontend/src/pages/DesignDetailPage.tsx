@@ -3,11 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "@tanstack/react-router";
 import { ArrowLeft, Package, Truck } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import Header from "../components/Header";
 import { useAllTshirts, useWhatsappNumber } from "../hooks/useQueries";
-import { getAnonStorageClient } from "../hooks/useStorageClient";
 
 const FALLBACK_NUMBER = "919876543210";
 
@@ -50,7 +48,6 @@ function calcTotal(price: string, delivery: string): string {
   const p = Number.parseFloat(price.replace(/[^\d.]/g, ""));
   const d = Number.parseFloat(delivery.replace(/[^\d.]/g, ""));
   if (Number.isNaN(p) || Number.isNaN(d)) return "—";
-  // detect currency symbol
   const sym = price.match(/[^\d.,\s]+/)?.[0] ?? "";
   return `${sym}${(p + d).toFixed(0)}`;
 }
@@ -77,36 +74,22 @@ export default function DesignDetailPage() {
   const { data: rawNumber } = useWhatsappNumber();
   const whatsappNumber = rawNumber ?? FALLBACK_NUMBER;
 
-  const [imgUrl, setImgUrl] = useState<string | null>(null);
-
   const backendTshirt = tshirts?.find((t) => t.name === decodedName);
   const fallbackTshirt = FALLBACK_TSHIRTS.find((t) => t.name === decodedName);
 
   const tshirt = backendTshirt
-    ? { ...backendTshirt, image: null }
+    ? backendTshirt
     : fallbackTshirt
       ? {
           name: fallbackTshirt.name,
           description: fallbackTshirt.description,
-          imageKey: "",
+          imageKey: fallbackTshirt.image,
           price: fallbackTshirt.price,
           deliveryCharge: fallbackTshirt.deliveryCharge,
-          image: fallbackTshirt.image,
         }
       : null;
 
-  useEffect(() => {
-    if (backendTshirt?.imageKey) {
-      getAnonStorageClient().then((client) => {
-        client
-          .getDirectURL(backendTshirt.imageKey)
-          .then(setImgUrl)
-          .catch(() => {});
-      });
-    } else if (fallbackTshirt?.image) {
-      setImgUrl(fallbackTshirt.image);
-    }
-  }, [backendTshirt, fallbackTshirt]);
+  const imgUrl = tshirt?.imageKey ?? null;
 
   const total = tshirt
     ? calcTotal(tshirt.price ?? "", tshirt.deliveryCharge ?? "")

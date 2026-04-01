@@ -25,12 +25,17 @@ import {
   useSetWhatsapp,
   useWhatsappNumber,
 } from "../hooks/useQueries";
-import {
-  getAnonStorageClient,
-  useStorageClient,
-} from "../hooks/useStorageClient";
 
 const ADMIN_PASSWORD = "OBS1314";
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(
@@ -195,7 +200,6 @@ function DesignsTab() {
   const { data: tshirts = [], isLoading } = useAllTshirts();
   const removeMutation = useRemoveTshirt();
   const addMutation = useAddTshirt();
-  const storageClient = useStorageClient();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -214,7 +218,7 @@ function DesignsTab() {
   };
 
   const handleAddTshirt = async () => {
-    if (!name.trim() || !imageFile || !storageClient) {
+    if (!name.trim() || !imageFile) {
       toast.error("Please fill in the name and upload an image");
       return;
     }
@@ -224,12 +228,11 @@ function DesignsTab() {
     }
     setUploading(true);
     try {
-      const bytes = new Uint8Array(await imageFile.arrayBuffer());
-      const { hash } = await storageClient.putFile(bytes);
+      const imageKey = await fileToBase64(imageFile);
       await addMutation.mutateAsync({
         name: name.trim(),
         description: description.trim(),
-        imageKey: hash,
+        imageKey,
         price: price.trim(),
         deliveryCharge: deliveryCharge.trim(),
       });
@@ -366,7 +369,7 @@ function DesignsTab() {
           </div>
           <Button
             onClick={handleAddTshirt}
-            disabled={uploading || addMutation.isPending || !storageClient}
+            disabled={uploading || addMutation.isPending}
             className="w-full"
           >
             {uploading || addMutation.isPending ? (
@@ -375,7 +378,7 @@ function DesignsTab() {
               <Upload className="mr-2 h-4 w-4" />
             )}
             {uploading
-              ? "Uploading photo..."
+              ? "Processing photo..."
               : addMutation.isPending
                 ? "Saving..."
                 : "Add Design"}
@@ -401,23 +404,12 @@ function TshirtRow({
   index: number;
   onDelete: () => void;
 }) {
-  const [imgUrl, setImgUrl] = useState<string | null>(null);
-
-  useState(() => {
-    getAnonStorageClient().then((client) => {
-      client
-        .getDirectURL(tshirt.imageKey)
-        .then(setImgUrl)
-        .catch(() => {});
-    });
-  });
-
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20">
       <div className="w-12 h-12 bg-muted rounded overflow-hidden shrink-0">
-        {imgUrl && (
+        {tshirt.imageKey && (
           <img
-            src={imgUrl}
+            src={tshirt.imageKey}
             alt={tshirt.name}
             className="w-full h-full object-cover"
           />
