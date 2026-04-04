@@ -43,10 +43,15 @@ const FALLBACK_TSHIRTS = [
   },
 ];
 
-function buildWhatsappLink(number: string, designName: string) {
+function buildWhatsappLink(
+  number: string,
+  designName: string,
+  imageUrl: string,
+) {
   const clean = number.replace(/\D/g, "") || FALLBACK_NUMBER;
+  // Image URL placed FIRST so WhatsApp renders it as a preview at the top of the message
   const msg = encodeURIComponent(
-    `Hi! I'd like to order the "${designName}" t-shirt from Three Origin. Please let me know the details.`,
+    `${imageUrl}\n\nHi! I'd like to order the "${designName}" t-shirt from Three Origin.\n\nPlease let me know the details.`,
   );
   return `https://wa.me/${clean}?text=${msg}`;
 }
@@ -74,6 +79,12 @@ function TshirtCard({
     price && deliveryCharge
       ? `${price} + ${deliveryCharge} delivery`
       : (price ?? "");
+
+  const absoluteImageUrl = imageKey
+    ? imageKey.startsWith("http")
+      ? imageKey
+      : `${window.location.origin}${imageKey}`
+    : "";
 
   return (
     <motion.div
@@ -124,7 +135,7 @@ function TshirtCard({
             {description}
           </p>
           <a
-            href={buildWhatsappLink(whatsappNumber, name)}
+            href={buildWhatsappLink(whatsappNumber, name, absoluteImageUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
@@ -235,60 +246,67 @@ export default function HomePage() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
               data-ocid="designs.list"
             >
-              {FALLBACK_TSHIRTS.map((tshirt, index) => (
-                <motion.div
-                  key={tshirt.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  data-ocid={`designs.item.${index + 1}`}
-                >
-                  <Card className="bg-card border-border overflow-hidden hover:border-[#25D366]/50 transition-colors">
-                    <button
-                      type="button"
-                      className="aspect-square overflow-hidden relative w-full block cursor-pointer group"
-                      onClick={() =>
-                        navigate({
-                          to: "/design/$name",
-                          params: { name: encodeURIComponent(tshirt.name) },
-                        })
-                      }
-                      aria-label={`View ${tshirt.name}`}
-                    >
-                      <img
-                        src={tshirt.image}
-                        alt={tshirt.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full">
-                          View Details
-                        </span>
-                      </div>
-                    </button>
-                    <CardContent className="p-4">
-                      <h3 className="font-display font-bold text-base uppercase tracking-wide mb-0.5">
-                        {tshirt.name}
-                      </h3>
-                      <p className="text-foreground/80 text-xs font-semibold mb-1">
-                        {tshirt.price} + {tshirt.deliveryCharge} delivery
-                      </p>
-                      <p className="text-muted-foreground text-xs leading-relaxed mb-3">
-                        {tshirt.description}
-                      </p>
-                      <a
-                        href={buildWhatsappLink(whatsappNumber, tshirt.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+              {FALLBACK_TSHIRTS.map((tshirt, index) => {
+                const absoluteImageUrl = `${window.location.origin}${tshirt.image}`;
+                return (
+                  <motion.div
+                    key={tshirt.id}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    data-ocid={`designs.item.${index + 1}`}
+                  >
+                    <Card className="bg-card border-border overflow-hidden hover:border-[#25D366]/50 transition-colors">
+                      <button
+                        type="button"
+                        className="aspect-square overflow-hidden relative w-full block cursor-pointer group"
+                        onClick={() =>
+                          navigate({
+                            to: "/design/$name",
+                            params: { name: encodeURIComponent(tshirt.name) },
+                          })
+                        }
+                        aria-label={`View ${tshirt.name}`}
                       >
-                        <SiWhatsapp className="w-4 h-4" />
-                        Order Now
-                      </a>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        <img
+                          src={tshirt.image}
+                          alt={tshirt.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full">
+                            View Details
+                          </span>
+                        </div>
+                      </button>
+                      <CardContent className="p-4">
+                        <h3 className="font-display font-bold text-base uppercase tracking-wide mb-0.5">
+                          {tshirt.name}
+                        </h3>
+                        <p className="text-foreground/80 text-xs font-semibold mb-1">
+                          {tshirt.price} + {tshirt.deliveryCharge} delivery
+                        </p>
+                        <p className="text-muted-foreground text-xs leading-relaxed mb-3">
+                          {tshirt.description}
+                        </p>
+                        <a
+                          href={buildWhatsappLink(
+                            whatsappNumber,
+                            tshirt.name,
+                            absoluteImageUrl,
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                        >
+                          <SiWhatsapp className="w-4 h-4" />
+                          Order Now
+                        </a>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </section>

@@ -60,8 +60,9 @@ function buildWhatsappMessage(
   imageUrl: string,
 ) {
   const clean = whatsapp.replace(/\D/g, "") || FALLBACK_NUMBER;
+  // Image URL placed FIRST so WhatsApp renders it as a preview at the top of the message
   const msg = encodeURIComponent(
-    `Hi! I'd like to order the "${name}" t-shirt from Three Origin.\n\nPrice: ${price}\nDelivery: ${delivery}\n\nDesign image: ${imageUrl}\n\nPlease confirm availability.`,
+    `${imageUrl}\n\nHi! I'd like to order the "${name}" t-shirt from Three Origin.\n\nPrice: ${price}\nDelivery: ${delivery}\n\nPlease confirm availability.`,
   );
   return `https://wa.me/${clean}?text=${msg}`;
 }
@@ -94,13 +95,21 @@ export default function DesignDetailPage() {
   const total = tshirt
     ? calcTotal(tshirt.price ?? "", tshirt.deliveryCharge ?? "")
     : "—";
+
+  // Build absolute image URL so WhatsApp can load the preview
+  const absoluteImageUrl = imgUrl
+    ? imgUrl.startsWith("http")
+      ? imgUrl
+      : `${window.location.origin}${imgUrl}`
+    : window.location.href;
+
   const waLink = tshirt
     ? buildWhatsappMessage(
         whatsappNumber,
         tshirt.name,
         tshirt.price ?? "",
         tshirt.deliveryCharge ?? "",
-        imgUrl ?? window.location.href,
+        absoluteImageUrl,
       )
     : "#";
 
