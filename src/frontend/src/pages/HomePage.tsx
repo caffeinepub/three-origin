@@ -107,7 +107,7 @@ function ProductCard({
         )}
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100">
-          <span className="bg-background text-foreground text-xs font-semibold tracking-wider uppercase px-4 py-2 rounded-full flex items-center gap-2">
+          <span className="bg-background text-foreground text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-full flex items-center gap-2">
             View Product <ArrowRight className="w-3 h-3" />
           </span>
         </div>
@@ -116,10 +116,10 @@ function ProductCard({
       {/* Info */}
       <div>
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-display font-bold text-sm uppercase tracking-wide leading-tight">
+          <h3 className="font-display font-extrabold text-sm uppercase tracking-wide leading-tight">
             {name}
           </h3>
-          <span className="font-bold text-sm text-foreground shrink-0">
+          <span className="font-extrabold text-sm text-foreground shrink-0">
             {price}
           </span>
         </div>
@@ -130,7 +130,7 @@ function ProductCard({
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs tracking-wider uppercase h-8"
+            className="w-full text-xs font-bold tracking-wider uppercase h-8"
             tabIndex={-1}
           >
             View Product
@@ -165,7 +165,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-white/60 text-xs tracking-[0.4em] uppercase mb-4"
+              className="text-white/60 text-xs font-bold tracking-[0.4em] uppercase mb-4"
             >
               Collection 2026
             </motion.p>
@@ -173,7 +173,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl tracking-tight uppercase leading-none mb-6 text-white"
+              className="font-display font-black text-6xl sm:text-8xl lg:text-9xl tracking-tight uppercase leading-none mb-6 text-white drop-shadow-2xl"
             >
               Three
               <br />
@@ -183,7 +183,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
-              className="text-white/90 text-sm sm:text-base max-w-md mx-auto leading-relaxed mb-10"
+              className="text-white/90 text-sm sm:text-base font-medium max-w-md mx-auto leading-relaxed mb-10"
             >
               Streetwear rooted in authenticity. Each piece tells the story of
               where it came from.
@@ -196,7 +196,7 @@ export default function HomePage() {
             >
               <a
                 href="#shop"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:opacity-90 transition-opacity"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:opacity-90 transition-opacity"
                 data-ocid="hero.primary_button"
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function HomePage() {
               </a>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-semibold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-white/10 transition-colors"
                 data-ocid="hero.secondary_button"
               >
                 Contact Us
@@ -236,10 +236,10 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
             className="mb-12"
           >
-            <p className="text-xs tracking-[0.4em] uppercase text-muted-foreground mb-2">
+            <p className="text-xs font-bold tracking-[0.4em] uppercase text-muted-foreground mb-2">
               Our Collection
             </p>
-            <h2 className="font-display font-extrabold text-3xl sm:text-4xl uppercase tracking-tight">
+            <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight">
               Featured Designs
             </h2>
           </motion.div>
@@ -303,7 +303,7 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.1 }}
                 >
-                  <h3 className="font-display font-bold text-sm uppercase tracking-wider mb-2">
+                  <h3 className="font-display font-extrabold text-sm uppercase tracking-wider mb-2">
                     {item.title}
                   </h3>
                   <p className="text-muted-foreground text-xs leading-relaxed">
@@ -318,7 +318,7 @@ export default function HomePage() {
 
       <footer className="border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-display font-bold text-sm tracking-widest uppercase">
+          <p className="font-display font-black text-sm tracking-widest uppercase">
             Three Origin
           </p>
           <p className="text-muted-foreground text-xs">

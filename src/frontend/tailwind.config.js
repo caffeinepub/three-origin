@@ -16,9 +16,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["PlayfairDisplay", "serif"],
-        body: ["GeneralSans", "sans-serif"],
-        sans: ["GeneralSans", "sans-serif"],
+        display: ["BricolageGrotesque", "sans-serif"],
+        body: ["Satoshi", "sans-serif"],
+        sans: ["Satoshi", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",

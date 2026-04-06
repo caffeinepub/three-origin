@@ -15,7 +15,7 @@ export default function Header() {
         {/* Brand */}
         <Link
           to="/"
-          className="font-display font-extrabold text-lg sm:text-xl tracking-[0.2em] uppercase text-foreground hover:opacity-80 transition-opacity"
+          className="font-display font-black text-lg sm:text-xl tracking-[0.2em] uppercase text-foreground hover:opacity-80 transition-opacity"
           data-ocid="header.link"
         >
           THREE ORIGIN
@@ -25,7 +25,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-8">
           <Link
             to="/"
-            className={`text-sm font-medium tracking-wider uppercase transition-colors ${
+            className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/"
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -36,14 +36,14 @@ export default function Header() {
           </Link>
           <a
             href="/#shop"
-            className="text-sm font-medium tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm font-bold tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
             data-ocid="nav.shop.link"
           >
             Shop
           </a>
           <Link
             to="/cart"
-            className={`text-sm font-medium tracking-wider uppercase transition-colors ${
+            className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/cart"
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -54,7 +54,7 @@ export default function Header() {
           </Link>
           <Link
             to="/contact"
-            className={`text-sm font-medium tracking-wider uppercase transition-colors ${
+            className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/contact"
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -65,7 +65,7 @@ export default function Header() {
           </Link>
           <Link
             to="/admin"
-            className={`flex items-center gap-1.5 text-sm font-medium tracking-wider uppercase transition-colors ${
+            className={`flex items-center gap-1.5 text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/admin"
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -88,7 +88,7 @@ export default function Header() {
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
@@ -124,7 +124,7 @@ export default function Header() {
             <nav className="flex flex-col px-4 py-4 gap-1">
               <Link
                 to="/"
-                className={`px-3 py-2.5 text-sm font-medium tracking-wider uppercase rounded-md transition-colors ${
+                className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/"
                     ? "text-foreground bg-secondary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -136,7 +136,7 @@ export default function Header() {
               </Link>
               <button
                 type="button"
-                className="px-3 py-2.5 text-sm font-medium tracking-wider uppercase text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md transition-colors text-left"
+                className="px-3 py-2.5 text-sm font-bold tracking-wider uppercase text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md transition-colors text-left"
                 onClick={() => {
                   setMenuOpen(false);
                   window.location.href = "/#shop";
@@ -146,7 +146,7 @@ export default function Header() {
               </button>
               <Link
                 to="/cart"
-                className={`px-3 py-2.5 text-sm font-medium tracking-wider uppercase rounded-md transition-colors ${
+                className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/cart"
                     ? "text-foreground bg-secondary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -158,7 +158,7 @@ export default function Header() {
               </Link>
               <Link
                 to="/contact"
-                className={`px-3 py-2.5 text-sm font-medium tracking-wider uppercase rounded-md transition-colors ${
+                className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/contact"
                     ? "text-foreground bg-secondary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -170,7 +170,7 @@ export default function Header() {
               </Link>
               <Link
                 to="/admin"
-                className={`flex items-center gap-2 px-3 py-2.5 text-sm font-medium tracking-wider uppercase rounded-md transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/admin"
                     ? "text-foreground bg-secondary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
