@@ -15,10 +15,12 @@ import {
   ImagePlus,
   Loader2,
   Lock,
+  Pencil,
   Phone,
   Plus,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
@@ -31,19 +33,12 @@ import {
   useRemoveTshirt,
   useSetPaymentQR,
   useSetWhatsapp,
+  useUpdateTshirt,
   useWhatsappNumber,
 } from "../hooks/useQueries";
+import { useStorageClient } from "../hooks/useStorageClient";
 
 const ADMIN_PASSWORD = "OBS1314";
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 interface ContactEntry {
   label: string;
@@ -227,6 +222,7 @@ function DesignsTab() {
   const { data: tshirts = [], isLoading } = useAllTshirts();
   const removeMutation = useRemoveTshirt();
   const addMutation = useAddTshirt();
+  const storageClient = useStorageClient();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -260,9 +256,15 @@ function DesignsTab() {
       toast.error("Stock must be a number");
       return;
     }
+    if (!storageClient) {
+      toast.error("Storage not ready, please try again");
+      return;
+    }
     setUploading(true);
     try {
-      const imageKey = await fileToBase64(imageFile);
+      const bytes = new Uint8Array(await imageFile.arrayBuffer());
+      const { hash } = await storageClient.putFile(bytes);
+      const imageKey = await storageClient.getDirectURL(hash);
       await addMutation.mutateAsync({
         name: name.trim(),
         description: description.trim(),
@@ -310,7 +312,7 @@ function DesignsTab() {
         <CardHeader>
           <CardTitle className="text-base">Your Designs</CardTitle>
           <CardDescription>
-            Tap the trash icon to remove a design
+            Tap the pencil icon to edit a design or the trash icon to remove it
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -481,75 +483,248 @@ function DesignsTab() {
   );
 }
 
+type TshirtData = {
+  name: string;
+  description: string;
+  imageKey: string;
+  price: string;
+  deliveryCharge: string;
+  sizes?: string[];
+  colors?: string[];
+  stock?: bigint | number;
+};
+
 function TshirtRow({
   tshirt,
   index: _index,
   onDelete,
 }: {
-  tshirt: {
-    name: string;
-    description: string;
-    imageKey: string;
-    price: string;
-    deliveryCharge: string;
-    sizes?: string[];
-    colors?: string[];
-    stock?: bigint | number;
-  };
+  tshirt: TshirtData;
   index: number;
   onDelete: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const updateMutation = useUpdateTshirt();
+
+  const [editPrice, setEditPrice] = useState(tshirt.price);
+  const [editDelivery, setEditDelivery] = useState(tshirt.deliveryCharge);
+  const [editSizes, setEditSizes] = useState(tshirt.sizes?.join(", ") ?? "");
+  const [editColors, setEditColors] = useState(tshirt.colors?.join(", ") ?? "");
+  const [editStock, setEditStock] = useState(
+    tshirt.stock !== undefined ? String(Number(tshirt.stock)) : "0",
+  );
+  const [editDescription, setEditDescription] = useState(tshirt.description);
+
+  const handleSave = async () => {
+    if (!editPrice.trim() || !editDelivery.trim()) {
+      toast.error("Price and delivery charge are required");
+      return;
+    }
+    const stockNum = Number.parseInt(editStock.trim() || "0", 10);
+    if (Number.isNaN(stockNum) || stockNum < 0) {
+      toast.error("Stock must be a valid non-negative number");
+      return;
+    }
+    try {
+      await updateMutation.mutateAsync({
+        name: tshirt.name,
+        description: editDescription.trim(),
+        imageKey: tshirt.imageKey,
+        price: editPrice.trim(),
+        deliveryCharge: editDelivery.trim(),
+        sizes: editSizes.trim()
+          ? editSizes
+              .trim()
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+        colors: editColors.trim()
+          ? editColors
+              .trim()
+              .split(",")
+              .map((c) => c.trim())
+              .filter(Boolean)
+          : [],
+        stock: BigInt(stockNum),
+      });
+      toast.success(`"${tshirt.name}" updated!`);
+      setEditing(false);
+    } catch (err) {
+      toast.error("Failed to update design");
+      console.error(err);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditPrice(tshirt.price);
+    setEditDelivery(tshirt.deliveryCharge);
+    setEditSizes(tshirt.sizes?.join(", ") ?? "");
+    setEditColors(tshirt.colors?.join(", ") ?? "");
+    setEditStock(
+      tshirt.stock !== undefined ? String(Number(tshirt.stock)) : "0",
+    );
+    setEditDescription(tshirt.description);
+    setEditing(false);
+  };
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20">
-      <div className="w-12 h-12 bg-muted rounded overflow-hidden shrink-0">
-        {tshirt.imageKey && (
-          <img
-            src={tshirt.imageKey}
-            alt={tshirt.name}
-            className="w-full h-full object-cover"
-          />
-        )}
+    <div className="rounded-lg border border-border bg-secondary/20 overflow-hidden">
+      {/* Collapsed row */}
+      <div className="flex items-center gap-3 p-3">
+        <div className="w-12 h-12 bg-muted rounded overflow-hidden shrink-0">
+          {tshirt.imageKey && (
+            <img
+              src={tshirt.imageKey}
+              alt={tshirt.name}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{tshirt.name}</p>
+          {tshirt.price && (
+            <p className="text-muted-foreground text-xs">
+              {tshirt.price}
+              {tshirt.deliveryCharge
+                ? ` + ${tshirt.deliveryCharge} delivery`
+                : ""}
+            </p>
+          )}
+          <p className="text-muted-foreground text-xs">
+            Stock:{" "}
+            <span
+              className={
+                Number(tshirt.stock ?? 0) === 0
+                  ? "text-red-400 font-semibold"
+                  : "text-green-400 font-semibold"
+              }
+            >
+              {Number(tshirt.stock ?? 0)} units
+            </span>
+          </p>
+          {tshirt.sizes && tshirt.sizes.length > 0 && (
+            <p className="text-muted-foreground text-xs">
+              Sizes: {tshirt.sizes.join(", ")}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setEditing(!editing)}
+            className="text-muted-foreground hover:text-foreground"
+            data-ocid="admin.designs.edit_button"
+          >
+            {editing ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Pencil className="w-4 h-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            data-ocid="admin.designs.delete_button"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">{tshirt.name}</p>
-        {tshirt.price && (
-          <p className="text-muted-foreground text-xs">
-            {tshirt.price}
-            {tshirt.deliveryCharge
-              ? ` + ${tshirt.deliveryCharge} delivery`
-              : ""}
+
+      {/* Expanded edit form */}
+      {editing && (
+        <div className="border-t border-border px-4 py-4 space-y-3 bg-background/40">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Edit Design
           </p>
-        )}
-        {tshirt.sizes && tshirt.sizes.length > 0 && (
-          <p className="text-muted-foreground text-xs">
-            Sizes: {tshirt.sizes.join(", ")}
-          </p>
-        )}
-        {tshirt.colors && tshirt.colors.length > 0 && (
-          <p className="text-muted-foreground text-xs">
-            Colors: {tshirt.colors.join(", ")}
-          </p>
-        )}
-        {tshirt.stock !== undefined && Number(tshirt.stock) > 0 && (
-          <p className="text-muted-foreground text-xs">
-            {Number(tshirt.stock)} units left
-          </p>
-        )}
-        {tshirt.description && (
-          <p className="text-muted-foreground text-xs truncate">
-            {tshirt.description}
-          </p>
-        )}
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onDelete}
-        className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-        data-ocid="admin.designs.delete_button"
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+          <div className="space-y-2">
+            <Label className="text-xs">Description</Label>
+            <Textarea
+              placeholder="Short description..."
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="resize-none text-sm"
+              rows={2}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Price *</Label>
+              <Input
+                placeholder="e.g. ₹499"
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                className="text-sm h-8"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Delivery Charge *</Label>
+              <Input
+                placeholder="e.g. ₹50"
+                value={editDelivery}
+                onChange={(e) => setEditDelivery(e.target.value)}
+                className="text-sm h-8"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Stock (units remaining) *</Label>
+            <Input
+              type="number"
+              min="0"
+              placeholder="e.g. 50"
+              value={editStock}
+              onChange={(e) => setEditStock(e.target.value)}
+              className="text-sm h-8"
+              data-ocid="admin.designs.stock_edit_input"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Sizes (comma-separated)</Label>
+            <Input
+              placeholder="e.g. S, M, L, XL, XXL"
+              value={editSizes}
+              onChange={(e) => setEditSizes(e.target.value)}
+              className="text-sm h-8"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Colors (comma-separated)</Label>
+            <Input
+              placeholder="e.g. Black, White, Red"
+              value={editColors}
+              onChange={(e) => setEditColors(e.target.value)}
+              className="text-sm h-8"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+              size="sm"
+              className="flex-1"
+              data-ocid="admin.designs.save_edit_button"
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              ) : null}
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

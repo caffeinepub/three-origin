@@ -1,43 +1,25 @@
-# Three Origin — Color Options per Design
+# Three Origin
 
 ## Current State
+The admin panel stores t-shirt images as full base64 data URLs inside the `imageKey` field of the `Tshirt` record. When a user edits a design and saves, the full base64 image (potentially several MB) is passed back through the ICP canister `updateTshirt` call, which exceeds the 2MB message size limit and causes a trap ("failed to save" error).
 
-- `Tshirt` record in backend has: `name`, `description`, `imageKey`, `price`, `deliveryCharge`, `sizes: [Text]`, `stock: Nat`
-- No color data exists anywhere — backend, TypeScript types, admin panel, or detail page
-- Admin panel has fields: name, description, price, delivery charge, sizes (comma-separated), stock, single image upload
-- `DesignDetailPage` shows: image, title, price, delivery, size selector buttons, quantity, WhatsApp order button
-- WhatsApp message includes: image URL, name, size, quantity, price, delivery — no color
+The blob-storage system is already integrated and available via `StorageClient` and `useStorageClient`.
 
 ## Requested Changes (Diff)
 
 ### Add
-- `colors: [Text]` field on `Tshirt` backend type — list of color names (e.g. ["Black", "White", "Red"])
-- Admin panel: color input field — user types comma-separated color names (same pattern as sizes), stored on save
-- `DesignDetailPage`: color swatch selector — clickable buttons/pills for each color, one auto-selected on load, selected color highlighted
-- Selected color included in the WhatsApp order message (e.g. "Color: Black")
-- Color shown in the Cart and cart WhatsApp message
+- Upload images to blob storage when adding a new design; store the resulting blob hash/URL in `imageKey` instead of base64
+- Show upload progress when adding a new design
 
 ### Modify
-- `Tshirt` type in `main.mo` — add `colors : [Text]`
-- `Tshirt` interface in `backend.d.ts` — add `colors: Array<string>`
-- `addTshirt` call in `AdminPage.tsx` — include `colors` array parsed from comma-separated input
-- `DesignDetailPage.tsx` — add `selectedColor` state, render color swatches, include color in WhatsApp message
-- `CartContext.tsx` / `CartPage.tsx` — include `selectedColor` in cart item and WhatsApp summary if present
+- `handleAddTshirt` in `DesignsTab`: use `StorageClient.putFile()` to upload the image, then store the returned direct URL in `imageKey`
+- `TshirtRow` edit save (`handleSave`): already passes `tshirt.imageKey` (the URL), which will now be small -- this will work correctly once images are stored as URLs
 
 ### Remove
-- Nothing removed
+- `fileToBase64` helper (no longer needed once blob storage is used)
 
 ## Implementation Plan
-
-1. Update `Tshirt` record in `main.mo` to include `colors : [Text]`
-2. Update `backend.d.ts` `Tshirt` interface to include `colors: Array<string>`
-3. Update `AdminPage.tsx` DesignsTab:
-   - Add `colors` state (string input, comma-separated)
-   - Parse and pass colors array when calling `addTshirt`
-   - Display colors in the design list rows
-4. Update `DesignDetailPage.tsx`:
-   - Add `selectedColor` state (default to first color on load)
-   - Render color swatches as clickable pill/button row — only shown if design has colors
-   - Highlight selected color
-   - Include `Color: {selectedColor}` in WhatsApp message if a color is selected
-5. Update `CartContext.tsx` and `CartPage.tsx` to carry `selectedColor` per cart item and include it in WhatsApp order summary
+1. In `AdminPage.tsx`, import `useStorageClient` and use `StorageClient.putFile()` to upload the image
+2. Store the direct URL (from `storageClient.getDirectURL(hash)`) as the `imageKey`
+3. Keep the existing edit flow -- it already re-passes `tshirt.imageKey`, which will now be a short URL string instead of a huge base64
+4. No backend changes needed

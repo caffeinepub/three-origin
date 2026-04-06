@@ -21,7 +21,11 @@ export function useWhatsappNumber() {
     queryKey: ["whatsapp"],
     queryFn: async () => {
       if (!actor) return "";
-      return actor.getWhatsappNumber();
+      try {
+        return await actor.getWhatsappNumber();
+      } catch {
+        return "";
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -33,8 +37,12 @@ export function usePaymentQR() {
     queryKey: ["paymentQR"],
     queryFn: async () => {
       if (!actor) return "";
-      const blob = await actor.getPaymentQR();
-      return blob.getDirectURL();
+      try {
+        const blob = await actor.getPaymentQR();
+        return blob.getDirectURL();
+      } catch {
+        return "";
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -45,8 +53,20 @@ export function useAddTshirt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (tshirt: Tshirt) => {
-      if (!actor) throw new Error("Not authenticated");
+      if (!actor) throw new Error("Not connected");
       return actor.addTshirt(tshirt);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
+  });
+}
+
+export function useUpdateTshirt() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (tshirt: Tshirt) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.updateTshirt(tshirt);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
   });
@@ -57,7 +77,7 @@ export function useRemoveTshirt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (name: string) => {
-      if (!actor) throw new Error("Not authenticated");
+      if (!actor) throw new Error("Not connected");
       return actor.removeTshirt(name);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
@@ -69,7 +89,7 @@ export function useSetWhatsapp() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (number: string) => {
-      if (!actor) throw new Error("Not authenticated");
+      if (!actor) throw new Error("Not connected");
       return actor.setWhatsappNumber(number);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["whatsapp"] }),
@@ -81,7 +101,7 @@ export function useSetPaymentQR() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (bytes: Uint8Array<ArrayBuffer>) => {
-      if (!actor) throw new Error("Not authenticated");
+      if (!actor) throw new Error("Not connected");
       const blob = ExternalBlob.fromBytes(bytes);
       return actor.setPaymentQR(blob);
     },

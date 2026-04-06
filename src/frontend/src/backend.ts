@@ -132,6 +132,7 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addContact(contact: Contact): Promise<void>;
     addTshirt(tshirt: Tshirt): Promise<void>;
+    updateTshirt(tshirt: Tshirt): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getAllTshirts(): Promise<Array<Tshirt>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -275,6 +276,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addTshirt(arg0);
+            return result;
+        }
+    }
+    async updateTshirt(arg0: Tshirt): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateTshirt(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateTshirt(arg0);
             return result;
         }
     }

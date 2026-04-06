@@ -56,6 +56,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addContact' : ActorMethod<[Contact], undefined>,
   'addTshirt' : ActorMethod<[Tshirt], undefined>,
+  'updateTshirt' : ActorMethod<[Tshirt], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'getAllTshirts' : ActorMethod<[], Array<Tshirt>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,

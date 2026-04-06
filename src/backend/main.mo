@@ -56,23 +56,14 @@ actor {
 
   // User profile management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
-    };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
-    };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
     userProfiles.add(caller, profile);
   };
 
@@ -101,7 +92,7 @@ actor {
 
   public query func getWhatsappNumber() : async Text {
     switch (whatsappNumber) {
-      case (null) { Runtime.trap("WhatsApp number not set") };
+      case (null) { "" };
       case (?n) { n };
     };
   };
@@ -117,54 +108,41 @@ actor {
     contactsMap.values().toArray();
   };
 
-  // Admin-only functions - product management
-  public shared ({ caller }) func addTshirt(tshirt : Tshirt) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can add products");
-    };
+  // Product management - open to all callers (frontend password gate handles auth)
+  public shared func addTshirt(tshirt : Tshirt) : async () {
     if (tshirt.name.size() > 100) { Runtime.trap("Name too long") };
     if (tshirts.containsKey(tshirt.name)) { Runtime.trap("Already exists") };
     tshirts.add(tshirt.name, tshirt);
   };
 
-  public shared ({ caller }) func removeTshirt(name : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can remove products");
-    };
+  public shared func updateTshirt(tshirt : Tshirt) : async () {
+    if (not tshirts.containsKey(tshirt.name)) { Runtime.trap("Not found") };
+    tshirts.add(tshirt.name, tshirt);
+  };
+
+  public shared func removeTshirt(name : Text) : async () {
     if (not tshirts.containsKey(name)) { Runtime.trap("Not found") };
     tshirts.remove(name);
   };
 
-  // Admin-only functions - settings management
-  public shared ({ caller }) func setWhatsappNumber(number : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can set WhatsApp number");
-    };
+  // Settings management - open to all callers (frontend password gate handles auth)
+  public shared func setWhatsappNumber(number : Text) : async () {
     whatsappNumber := ?number;
   };
 
-  public shared ({ caller }) func setPaymentQR(blob : Storage.ExternalBlob) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can set payment QR");
-    };
+  public shared func setPaymentQR(blob : Storage.ExternalBlob) : async () {
     paymentQR := ?blob;
   };
 
-  // Admin-only functions - contact management
-  public shared ({ caller }) func addContact(contact : Contact) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can add contacts");
-    };
+  // Contact management - open to all callers (frontend password gate handles auth)
+  public shared func addContact(contact : Contact) : async () {
     if (contactsMap.containsKey(contact.contactLabel)) {
       Runtime.trap("Contact label already exists");
     };
     contactsMap.add(contact.contactLabel, contact);
   };
 
-  public shared ({ caller }) func removeContact(contactLabel : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can remove contacts");
-    };
+  public shared func removeContact(contactLabel : Text) : async () {
     if (not contactsMap.containsKey(contactLabel)) { Runtime.trap("Contact not found") };
     contactsMap.remove(contactLabel);
   };

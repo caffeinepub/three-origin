@@ -156,7 +156,7 @@ export default function HomePage() {
           className="relative min-h-[70vh] flex flex-col items-center justify-center bg-cover bg-center text-center px-4"
           style={{
             backgroundImage:
-              "url('/assets/generated/hero-bg-luxury.dim_1920x1080.jpg')",
+              "url('/assets/generated/hero-clothing-bg.dim_1920x1080.jpg')",
           }}
         >
           <div className="absolute inset-0 bg-black/60" />
