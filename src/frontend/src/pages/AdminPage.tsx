@@ -299,8 +299,9 @@ function DesignsTab() {
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      toast.error("Failed to add design");
-      console.error(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Failed to add design: ${msg}`);
+      console.error("addTshirt error:", err);
     } finally {
       setUploading(false);
     }
@@ -551,8 +552,9 @@ function TshirtRow({
       toast.success(`"${tshirt.name}" updated!`);
       setEditing(false);
     } catch (err) {
-      toast.error("Failed to update design");
-      console.error(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Save failed: ${msg}`);
+      console.error("updateTshirt error:", err);
     }
   };
 

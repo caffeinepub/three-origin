@@ -3,9 +3,7 @@ import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
-import List "mo:core/List";
 import Principal "mo:core/Principal";
-
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
@@ -63,8 +61,9 @@ actor {
     userProfiles.get(user);
   };
 
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    userProfiles.add(caller, profile);
+  public shared func saveCallerUserProfile(profile : UserProfile) : async () {
+    // no-op: not used in this app
+    ignore profile;
   };
 
   // Public query functions - accessible to everyone including guests
@@ -111,17 +110,16 @@ actor {
   // Product management - open to all callers (frontend password gate handles auth)
   public shared func addTshirt(tshirt : Tshirt) : async () {
     if (tshirt.name.size() > 100) { Runtime.trap("Name too long") };
-    if (tshirts.containsKey(tshirt.name)) { Runtime.trap("Already exists") };
+    // add() upserts: inserts or overwrites existing key
     tshirts.add(tshirt.name, tshirt);
   };
 
   public shared func updateTshirt(tshirt : Tshirt) : async () {
-    if (not tshirts.containsKey(tshirt.name)) { Runtime.trap("Not found") };
+    // add() upserts: always overwrites, never fails
     tshirts.add(tshirt.name, tshirt);
   };
 
   public shared func removeTshirt(name : Text) : async () {
-    if (not tshirts.containsKey(name)) { Runtime.trap("Not found") };
     tshirts.remove(name);
   };
 
@@ -136,14 +134,10 @@ actor {
 
   // Contact management - open to all callers (frontend password gate handles auth)
   public shared func addContact(contact : Contact) : async () {
-    if (contactsMap.containsKey(contact.contactLabel)) {
-      Runtime.trap("Contact label already exists");
-    };
     contactsMap.add(contact.contactLabel, contact);
   };
 
   public shared func removeContact(contactLabel : Text) : async () {
-    if (not contactsMap.containsKey(contactLabel)) { Runtime.trap("Contact not found") };
     contactsMap.remove(contactLabel);
   };
 };

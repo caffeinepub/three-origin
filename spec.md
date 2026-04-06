@@ -1,25 +1,28 @@
 # Three Origin
 
 ## Current State
-The admin panel stores t-shirt images as full base64 data URLs inside the `imageKey` field of the `Tshirt` record. When a user edits a design and saves, the full base64 image (potentially several MB) is passed back through the ICP canister `updateTshirt` call, which exceeds the 2MB message size limit and causes a trap ("failed to save" error).
+The admin panel has an edit (pencil) feature for updating existing designs. When the admin taps Save Changes, it calls `updateTshirt` via `useUpdateTshirt` hook. The backend `updateTshirt` function uses `Map.add` to overwrite the existing entry.
 
-The blob-storage system is already integrated and available via `StorageClient` and `useStorageClient`.
+User consistently reports "Failed to save" (shown as "Failed to update design" toast) when trying to update a design.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Upload images to blob storage when adding a new design; store the resulting blob hash/URL in `imageKey` instead of base64
-- Show upload progress when adding a new design
+- Better error surfacing so real error message is shown in the toast (not just generic "Failed to update design")
+- Retry logic in useUpdateTshirt to wait for actor if it's momentarily unavailable
+- Console logging of the actual error for debugging
 
 ### Modify
-- `handleAddTshirt` in `DesignsTab`: use `StorageClient.putFile()` to upload the image, then store the returned direct URL in `imageKey`
-- `TshirtRow` edit save (`handleSave`): already passes `tshirt.imageKey` (the URL), which will now be small -- this will work correctly once images are stored as URLs
+- `useUpdateTshirt` in `useQueries.ts`: surface the actual error message from the backend in the toast
+- `AdminPage.tsx` `handleSave`: log and display the actual error rather than a generic message
+- Backend `updateTshirt`: use `Map.replace` instead of `Map.add` to explicitly overwrite, ensuring the key is always updated
+- Backend: remove the `containsKey` guard on `updateTshirt` and instead use `replace` which handles both insert and update (so it never throws "Not found")
 
 ### Remove
-- `fileToBase64` helper (no longer needed once blob storage is used)
+- Generic error swallowing in the update flow
 
 ## Implementation Plan
-1. In `AdminPage.tsx`, import `useStorageClient` and use `StorageClient.putFile()` to upload the image
-2. Store the direct URL (from `storageClient.getDirectURL(hash)`) as the `imageKey`
-3. Keep the existing edit flow -- it already re-passes `tshirt.imageKey`, which will now be a short URL string instead of a huge base64
-4. No backend changes needed
+1. Update `main.mo`: change `updateTshirt` to use `tshirts.replace(tshirt.name, tshirt)` instead of `tshirts.add` - this is the explicit overwrite API
+2. Remove the "Not found" trap from `updateTshirt` so it upserts safely
+3. Update `useQueries.ts` `useUpdateTshirt`: surface the actual error message
+4. Update `AdminPage.tsx` `handleSave`: show the real error in the toast

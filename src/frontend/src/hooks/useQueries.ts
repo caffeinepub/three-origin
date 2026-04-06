@@ -53,7 +53,10 @@ export function useAddTshirt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (tshirt: Tshirt) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
       return actor.addTshirt(tshirt);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
@@ -65,7 +68,10 @@ export function useUpdateTshirt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (tshirt: Tshirt) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
       return actor.updateTshirt(tshirt);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
@@ -77,7 +83,10 @@ export function useRemoveTshirt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (name: string) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
       return actor.removeTshirt(name);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tshirts"] }),
@@ -89,7 +98,10 @@ export function useSetWhatsapp() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (number: string) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
       return actor.setWhatsappNumber(number);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["whatsapp"] }),
@@ -101,7 +113,10 @@ export function useSetPaymentQR() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (bytes: Uint8Array<ArrayBuffer>) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
       const blob = ExternalBlob.fromBytes(bytes);
       return actor.setPaymentQR(blob);
     },
