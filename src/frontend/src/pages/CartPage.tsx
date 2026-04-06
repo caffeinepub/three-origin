@@ -19,10 +19,12 @@ export default function CartPage() {
   function buildCartWhatsapp() {
     if (items.length === 0) return "#";
     const lines = items
-      .map(
-        (item) =>
-          `• ${item.name} (Size: ${item.selectedSize}, Qty: ${item.quantity}) — ${item.price}`,
-      )
+      .map((item) => {
+        const colorPart = item.selectedColor
+          ? `, Color: ${item.selectedColor}`
+          : "";
+        return `• ${item.name} (Size: ${item.selectedSize}${colorPart}, Qty: ${item.quantity}) — ${item.price}`;
+      })
       .join("\n");
     const msg = encodeURIComponent(
       `Hi! I'd like to order from Three Origin:\n\n${lines}\n\nPlease confirm availability and total charges.`,
@@ -94,7 +96,7 @@ export default function CartPage() {
                   <AnimatePresence>
                     {items.map((item, i) => (
                       <motion.div
-                        key={`${item.name}-${item.selectedSize}`}
+                        key={`${item.name}-${item.selectedSize}-${item.selectedColor ?? ""}`}
                         initial={{ opacity: 0, x: -16 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 16, height: 0 }}
@@ -122,6 +124,9 @@ export default function CartPage() {
                               </h3>
                               <p className="text-muted-foreground text-xs mt-0.5">
                                 Size: {item.selectedSize}
+                                {item.selectedColor
+                                  ? ` | Color: ${item.selectedColor}`
+                                  : ""}
                               </p>
                             </div>
                             <span className="font-bold text-sm shrink-0">
@@ -139,6 +144,7 @@ export default function CartPage() {
                                     item.name,
                                     item.selectedSize,
                                     item.quantity - 1,
+                                    item.selectedColor,
                                   )
                                 }
                                 className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
@@ -157,6 +163,7 @@ export default function CartPage() {
                                     item.name,
                                     item.selectedSize,
                                     item.quantity + 1,
+                                    item.selectedColor,
                                   )
                                 }
                                 className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
@@ -171,7 +178,11 @@ export default function CartPage() {
                             <button
                               type="button"
                               onClick={() =>
-                                removeFromCart(item.name, item.selectedSize)
+                                removeFromCart(
+                                  item.name,
+                                  item.selectedSize,
+                                  item.selectedColor,
+                                )
                               }
                               className="text-muted-foreground hover:text-destructive transition-colors"
                               aria-label="Remove item"

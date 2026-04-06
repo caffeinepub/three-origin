@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import { toast } from "sonner";
 import Header from "../components/Header";
@@ -31,6 +31,7 @@ const FALLBACK_TSHIRTS = [
     price: "₹499",
     deliveryCharge: "₹50",
     sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [] as string[],
     stock: BigInt(50),
   },
   {
@@ -41,6 +42,7 @@ const FALLBACK_TSHIRTS = [
     price: "₹499",
     deliveryCharge: "₹50",
     sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [] as string[],
     stock: BigInt(50),
   },
   {
@@ -51,6 +53,7 @@ const FALLBACK_TSHIRTS = [
     price: "₹599",
     deliveryCharge: "₹50",
     sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [] as string[],
     stock: BigInt(25),
   },
   {
@@ -61,6 +64,7 @@ const FALLBACK_TSHIRTS = [
     price: "₹549",
     deliveryCharge: "₹50",
     sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [] as string[],
     stock: BigInt(20),
   },
 ];
@@ -105,10 +109,12 @@ function buildWhatsappMessage(
   imageUrl: string,
   size: string,
   quantity: number,
+  color?: string | null,
 ) {
   const clean = whatsapp.replace(/\D/g, "") || FALLBACK_NUMBER;
+  const colorLine = color ? `\nColor: ${color}` : "";
   const msg = encodeURIComponent(
-    `${imageUrl}\n\nHi! I'd like to order the "${name}" t-shirt from Three Origin.\n\nSize: ${size}\nQuantity: ${quantity}\nItem Price: ${price}\nDelivery Charge: ${delivery}\n\nPlease confirm availability and provide payment details.`,
+    `${imageUrl}\n\nHi! I'd like to order the "${name}" t-shirt from Three Origin.\n\nSize: ${size}${colorLine}\nQuantity: ${quantity}\nItem Price: ${price}\nDelivery Charge: ${delivery}\n\nPlease confirm availability and provide payment details.`,
   );
   return `https://wa.me/${clean}?text=${msg}`;
 }
@@ -123,6 +129,7 @@ export default function DesignDetailPage() {
   const { addToCart } = useCart();
 
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const backendTshirt = tshirts?.find((t) => t.name === decodedName);
@@ -132,6 +139,15 @@ export default function DesignDetailPage() {
 
   const sizes =
     tshirt?.sizes && tshirt.sizes.length > 0 ? tshirt.sizes : DEFAULT_SIZES;
+  const colors =
+    tshirt?.colors && tshirt.colors.length > 0 ? tshirt.colors : [];
+
+  // Auto-select first color when tshirt data loads
+  useEffect(() => {
+    if (colors.length > 0 && selectedColor === null) {
+      setSelectedColor(colors[0]);
+    }
+  }, [colors, selectedColor]);
 
   const isOutOfStock =
     tshirt?.stock !== undefined && Number(tshirt.stock) === 0;
@@ -156,6 +172,7 @@ export default function DesignDetailPage() {
           absoluteImageUrl,
           selectedSize,
           quantity,
+          selectedColor,
         )
       : "#";
 
@@ -171,9 +188,11 @@ export default function DesignDetailPage() {
       price: tshirt.price,
       deliveryCharge: tshirt.deliveryCharge,
       selectedSize,
+      selectedColor: selectedColor ?? undefined,
       quantity,
     });
-    toast.success(`${tshirt.name} (${selectedSize}) added to cart!`);
+    const colorMsg = selectedColor ? ` / ${selectedColor}` : "";
+    toast.success(`${tshirt.name} (${selectedSize}${colorMsg}) added to cart!`);
   }
 
   function handleBuyNow() {
@@ -323,6 +342,42 @@ export default function DesignDetailPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Color Selector — only when colors are available */}
+                {colors.length > 0 && (
+                  <div data-ocid="design_detail.panel">
+                    <p className="text-xs tracking-[0.25em] uppercase text-muted-foreground mb-3">
+                      Select Color
+                      {selectedColor && (
+                        <span className="ml-2 normal-case tracking-normal text-foreground font-semibold">
+                          — {selectedColor}
+                        </span>
+                      )}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {colors.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() =>
+                            setSelectedColor(
+                              selectedColor === color ? null : color,
+                            )
+                          }
+                          className={`px-4 h-10 border rounded-lg text-sm font-semibold transition-all ${
+                            selectedColor === color
+                              ? "border-foreground bg-foreground text-background shadow-md"
+                              : "border-border bg-transparent text-foreground hover:border-foreground/60"
+                          }`}
+                          data-ocid="design_detail.toggle"
+                          aria-pressed={selectedColor === color}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Quantity */}
                 <div>

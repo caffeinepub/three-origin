@@ -233,6 +233,7 @@ function DesignsTab() {
   const [price, setPrice] = useState("");
   const [deliveryCharge, setDeliveryCharge] = useState("");
   const [sizes, setSizes] = useState("");
+  const [colors, setColors] = useState("");
   const [stock, setStock] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -275,6 +276,13 @@ function DesignsTab() {
               .map((s) => s.trim())
               .filter(Boolean)
           : [],
+        colors: colors.trim()
+          ? colors
+              .trim()
+              .split(",")
+              .map((c) => c.trim())
+              .filter(Boolean)
+          : [],
         stock: BigInt(Number.parseInt(stock.trim() || "0", 10)),
       });
       toast.success("Design added!");
@@ -283,6 +291,7 @@ function DesignsTab() {
       setPrice("");
       setDeliveryCharge("");
       setSizes("");
+      setColors("");
       setStock("");
       setImageFile(null);
       setImagePreview(null);
@@ -395,6 +404,21 @@ function DesignsTab() {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="tshirt-colors">
+              Available Colors (comma-separated)
+            </Label>
+            <Input
+              id="tshirt-colors"
+              placeholder="e.g. Black, White, Red, Navy Blue"
+              value={colors}
+              onChange={(e) => setColors(e.target.value)}
+              data-ocid="admin.colors.input"
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty if no color options for this design.
+            </p>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="tshirt-stock">Stock (units remaining)</Label>
             <Input
               id="tshirt-stock"
@@ -469,6 +493,7 @@ function TshirtRow({
     price: string;
     deliveryCharge: string;
     sizes?: string[];
+    colors?: string[];
     stock?: bigint | number;
   };
   index: number;
@@ -498,6 +523,11 @@ function TshirtRow({
         {tshirt.sizes && tshirt.sizes.length > 0 && (
           <p className="text-muted-foreground text-xs">
             Sizes: {tshirt.sizes.join(", ")}
+          </p>
+        )}
+        {tshirt.colors && tshirt.colors.length > 0 && (
+          <p className="text-muted-foreground text-xs">
+            Colors: {tshirt.colors.join(", ")}
           </p>
         )}
         {tshirt.stock !== undefined && Number(tshirt.stock) > 0 && (
@@ -733,30 +763,28 @@ function PaymentQRTab() {
           <>
             {currentUrl && (
               <div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Current QR Code:
+                <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider">
+                  Current QR Code
                 </p>
                 <img
                   src={currentUrl}
-                  alt="Current Payment QR"
-                  className="w-40 h-40 object-contain border border-border p-2 rounded-lg"
+                  alt="Payment QR"
+                  className="w-48 h-48 object-contain border border-border rounded-lg"
                 />
               </div>
             )}
-
-            {currentUrl && <Separator />}
-
+            <Separator />
             <div className="space-y-4">
-              <Label>Upload New QR Code</Label>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-foreground/40 transition-colors bg-transparent"
+                data-ocid="admin.payment.upload_button"
               >
                 {preview ? (
                   <img
                     src={preview}
-                    alt="Preview"
+                    alt="New QR Preview"
                     className="w-32 h-32 object-contain rounded"
                   />
                 ) : (
@@ -784,11 +812,9 @@ function PaymentQRTab() {
                 ) : (
                   <Upload className="mr-2 h-4 w-4" />
                 )}
-                {uploading
+                {uploading || mutation.isPending
                   ? "Uploading..."
-                  : mutation.isPending
-                    ? "Saving..."
-                    : "Upload QR Code"}
+                  : "Upload QR Code"}
               </Button>
             </div>
           </>

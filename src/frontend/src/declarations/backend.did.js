@@ -19,6 +19,10 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const Contact = IDL.Record({
+  'number' : IDL.Text,
+  'contactLabel' : IDL.Text,
+});
 export const Tshirt = IDL.Record({
   'deliveryCharge' : IDL.Text,
   'name' : IDL.Text,
@@ -26,6 +30,7 @@ export const Tshirt = IDL.Record({
   'sizes' : IDL.Vec(IDL.Text),
   'stock' : IDL.Nat,
   'imageKey' : IDL.Text,
+  'colors' : IDL.Vec(IDL.Text),
   'price' : IDL.Text,
 });
 export const UserRole = IDL.Variant({
@@ -64,11 +69,13 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addContact' : IDL.Func([Contact], [], []),
   'addTshirt' : IDL.Func([Tshirt], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getContacts' : IDL.Func([], [IDL.Vec(Contact)], ['query']),
   'getPaymentQR' : IDL.Func([], [ExternalBlob], ['query']),
   'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
   'getUserProfile' : IDL.Func(
@@ -78,6 +85,7 @@ export const idlService = IDL.Service({
     ),
   'getWhatsappNumber' : IDL.Func([], [IDL.Text], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'removeContact' : IDL.Func([IDL.Text], [], []),
   'removeTshirt' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchTshirts' : IDL.Func([IDL.Text], [IDL.Vec(Tshirt)], ['query']),
@@ -99,6 +107,10 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const Contact = IDL.Record({
+    'number' : IDL.Text,
+    'contactLabel' : IDL.Text,
+  });
   const Tshirt = IDL.Record({
     'deliveryCharge' : IDL.Text,
     'name' : IDL.Text,
@@ -106,6 +118,7 @@ export const idlFactory = ({ IDL }) => {
     'sizes' : IDL.Vec(IDL.Text),
     'stock' : IDL.Nat,
     'imageKey' : IDL.Text,
+    'colors' : IDL.Vec(IDL.Text),
     'price' : IDL.Text,
   });
   const UserRole = IDL.Variant({
@@ -144,11 +157,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addContact' : IDL.Func([Contact], [], []),
     'addTshirt' : IDL.Func([Tshirt], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getContacts' : IDL.Func([], [IDL.Vec(Contact)], ['query']),
     'getPaymentQR' : IDL.Func([], [ExternalBlob], ['query']),
     'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
     'getUserProfile' : IDL.Func(
@@ -158,6 +173,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getWhatsappNumber' : IDL.Func([], [IDL.Text], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'removeContact' : IDL.Func([IDL.Text], [], []),
     'removeTshirt' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchTshirts' : IDL.Func([IDL.Text], [IDL.Vec(Tshirt)], ['query']),

@@ -89,6 +89,10 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface Contact {
+    number: string;
+    contactLabel: string;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -99,6 +103,7 @@ export interface Tshirt {
     sizes: Array<string>;
     stock: bigint;
     imageKey: string;
+    colors: Array<string>;
     price: string;
 }
 export interface _CaffeineStorageCreateCertificateResult {
@@ -125,16 +130,19 @@ export interface backendInterface {
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    addContact(contact: Contact): Promise<void>;
     addTshirt(tshirt: Tshirt): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     getAllTshirts(): Promise<Array<Tshirt>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getContacts(): Promise<Array<Contact>>;
     getPaymentQR(): Promise<ExternalBlob>;
     getTshirt(name: string): Promise<Tshirt>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWhatsappNumber(): Promise<string>;
     isCallerAdmin(): Promise<boolean>;
+    removeContact(contactLabel: string): Promise<void>;
     removeTshirt(name: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchTshirts(term: string): Promise<Array<Tshirt>>;
@@ -242,6 +250,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async addContact(arg0: Contact): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addContact(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addContact(arg0);
+            return result;
+        }
+    }
     async addTshirt(arg0: Tshirt): Promise<void> {
         if (this.processError) {
             try {
@@ -312,6 +334,20 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getContacts(): Promise<Array<Contact>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getContacts();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getContacts();
+            return result;
+        }
+    }
     async getPaymentQR(): Promise<ExternalBlob> {
         if (this.processError) {
             try {
@@ -379,6 +415,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async removeContact(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeContact(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeContact(arg0);
             return result;
         }
     }

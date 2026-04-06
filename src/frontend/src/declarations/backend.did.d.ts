@@ -10,6 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Contact { 'number' : string, 'contactLabel' : string }
 export type ExternalBlob = Uint8Array;
 export interface Tshirt {
   'deliveryCharge' : string,
@@ -18,6 +19,7 @@ export interface Tshirt {
   'sizes' : Array<string>,
   'stock' : bigint,
   'imageKey' : string,
+  'colors' : Array<string>,
   'price' : string,
 }
 export interface UserProfile { 'name' : string }
@@ -52,16 +54,19 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addContact' : ActorMethod<[Contact], undefined>,
   'addTshirt' : ActorMethod<[Tshirt], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'getAllTshirts' : ActorMethod<[], Array<Tshirt>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getContacts' : ActorMethod<[], Array<Contact>>,
   'getPaymentQR' : ActorMethod<[], ExternalBlob>,
   'getTshirt' : ActorMethod<[string], Tshirt>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWhatsappNumber' : ActorMethod<[], string>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'removeContact' : ActorMethod<[string], undefined>,
   'removeTshirt' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchTshirts' : ActorMethod<[string], Array<Tshirt>>,

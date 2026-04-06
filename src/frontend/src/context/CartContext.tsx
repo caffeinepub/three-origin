@@ -12,6 +12,7 @@ export interface CartItem {
   price: string;
   deliveryCharge: string;
   selectedSize: string;
+  selectedColor?: string;
   quantity: number;
 }
 
@@ -20,8 +21,13 @@ interface CartContextValue {
   cartCount: number;
   cartTotal: number;
   addToCart: (item: CartItem) => void;
-  removeFromCart: (name: string, size: string) => void;
-  updateQuantity: (name: string, size: string, qty: number) => void;
+  removeFromCart: (name: string, size: string, color?: string) => void;
+  updateQuantity: (
+    name: string,
+    size: string,
+    qty: number,
+    color?: string,
+  ) => void;
   clearCart: () => void;
 }
 
@@ -51,11 +57,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = useCallback((item: CartItem) => {
     setItems((prev) => {
       const existing = prev.find(
-        (i) => i.name === item.name && i.selectedSize === item.selectedSize,
+        (i) =>
+          i.name === item.name &&
+          i.selectedSize === item.selectedSize &&
+          (i.selectedColor ?? "") === (item.selectedColor ?? ""),
       );
       if (existing) {
         return prev.map((i) =>
-          i.name === item.name && i.selectedSize === item.selectedSize
+          i.name === item.name &&
+          i.selectedSize === item.selectedSize &&
+          (i.selectedColor ?? "") === (item.selectedColor ?? "")
             ? { ...i, quantity: i.quantity + item.quantity }
             : i,
         );
@@ -64,18 +75,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeFromCart = useCallback((name: string, size: string) => {
-    setItems((prev) =>
-      prev.filter((i) => !(i.name === name && i.selectedSize === size)),
-    );
-  }, []);
+  const removeFromCart = useCallback(
+    (name: string, size: string, color?: string) => {
+      setItems((prev) =>
+        prev.filter(
+          (i) =>
+            !(
+              i.name === name &&
+              i.selectedSize === size &&
+              (i.selectedColor ?? "") === (color ?? "")
+            ),
+        ),
+      );
+    },
+    [],
+  );
 
   const updateQuantity = useCallback(
-    (name: string, size: string, qty: number) => {
+    (name: string, size: string, qty: number, color?: string) => {
       if (qty < 1) return;
       setItems((prev) =>
         prev.map((i) =>
-          i.name === name && i.selectedSize === size
+          i.name === name &&
+          i.selectedSize === size &&
+          (i.selectedColor ?? "") === (color ?? "")
             ? { ...i, quantity: qty }
             : i,
         ),
