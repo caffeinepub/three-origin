@@ -11,7 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, Loader2, Lock, Trash2, Upload } from "lucide-react";
+import {
+  ImagePlus,
+  Loader2,
+  Lock,
+  Phone,
+  Plus,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +43,25 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+interface ContactEntry {
+  label: string;
+  number: string;
+}
+
+function parseContacts(raw: string): ContactEntry[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as ContactEntry[];
+  } catch {
+    // not JSON
+  }
+  // Legacy: plain number string
+  const clean = raw.replace(/\D/g, "");
+  if (clean) return [{ label: "WhatsApp", number: clean }];
+  return [];
 }
 
 export default function AdminPage() {
@@ -157,8 +184,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <TabsTrigger value="designs" className="flex-1">
                   👕 Designs
                 </TabsTrigger>
-                <TabsTrigger value="whatsapp" className="flex-1">
-                  📱 WhatsApp
+                <TabsTrigger value="contacts" className="flex-1">
+                  📞 Contacts
                 </TabsTrigger>
                 <TabsTrigger value="payment" className="flex-1">
                   💳 Payment QR
@@ -168,8 +195,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <TabsContent value="designs">
                 <DesignsTab />
               </TabsContent>
-              <TabsContent value="whatsapp">
-                <WhatsAppTab />
+              <TabsContent value="contacts">
+                <ContactsTab />
               </TabsContent>
               <TabsContent value="payment">
                 <PaymentQRTab />
@@ -205,6 +232,8 @@ function DesignsTab() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [deliveryCharge, setDeliveryCharge] = useState("");
+  const [sizes, setSizes] = useState("");
+  const [stock, setStock] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -226,6 +255,10 @@ function DesignsTab() {
       toast.error("Please fill in price and delivery charge");
       return;
     }
+    if (stock.trim() && Number.isNaN(Number.parseInt(stock.trim(), 10))) {
+      toast.error("Stock must be a number");
+      return;
+    }
     setUploading(true);
     try {
       const imageKey = await fileToBase64(imageFile);
@@ -235,12 +268,22 @@ function DesignsTab() {
         imageKey,
         price: price.trim(),
         deliveryCharge: deliveryCharge.trim(),
+        sizes: sizes.trim()
+          ? sizes
+              .trim()
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+        stock: BigInt(Number.parseInt(stock.trim() || "0", 10)),
       });
       toast.success("Design added!");
       setName("");
       setDescription("");
       setPrice("");
       setDeliveryCharge("");
+      setSizes("");
+      setStock("");
       setImageFile(null);
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -340,6 +383,30 @@ function DesignsTab() {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="tshirt-sizes">
+              Available Sizes (comma-separated)
+            </Label>
+            <Input
+              id="tshirt-sizes"
+              placeholder="e.g. S, M, L, XL, XXL"
+              value={sizes}
+              onChange={(e) => setSizes(e.target.value)}
+              data-ocid="admin.sizes.input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tshirt-stock">Stock (units remaining)</Label>
+            <Input
+              id="tshirt-stock"
+              type="number"
+              min="0"
+              placeholder="e.g. 50"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              data-ocid="admin.stock.input"
+            />
+          </div>
+          <div className="space-y-2">
             <Label>Photo *</Label>
             <button
               type="button"
@@ -371,6 +438,7 @@ function DesignsTab() {
             onClick={handleAddTshirt}
             disabled={uploading || addMutation.isPending}
             className="w-full"
+            data-ocid="admin.designs.submit_button"
           >
             {uploading || addMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -400,6 +468,8 @@ function TshirtRow({
     imageKey: string;
     price: string;
     deliveryCharge: string;
+    sizes?: string[];
+    stock?: bigint | number;
   };
   index: number;
   onDelete: () => void;
@@ -425,6 +495,16 @@ function TshirtRow({
               : ""}
           </p>
         )}
+        {tshirt.sizes && tshirt.sizes.length > 0 && (
+          <p className="text-muted-foreground text-xs">
+            Sizes: {tshirt.sizes.join(", ")}
+          </p>
+        )}
+        {tshirt.stock !== undefined && Number(tshirt.stock) > 0 && (
+          <p className="text-muted-foreground text-xs">
+            {Number(tshirt.stock)} units left
+          </p>
+        )}
         {tshirt.description && (
           <p className="text-muted-foreground text-xs truncate">
             {tshirt.description}
@@ -436,6 +516,7 @@ function TshirtRow({
         size="icon"
         onClick={onDelete}
         className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+        data-ocid="admin.designs.delete_button"
       >
         <Trash2 className="w-4 h-4" />
       </Button>
@@ -443,76 +524,158 @@ function TshirtRow({
   );
 }
 
-function WhatsAppTab() {
-  const { data: current = "", isLoading } = useWhatsappNumber();
-  const [value, setValue] = useState("");
+function ContactsTab() {
+  const { data: rawValue = "", isLoading } = useWhatsappNumber();
   const mutation = useSetWhatsapp();
 
-  useState(() => {
-    if (current) setValue(current);
-  });
+  const [contacts, setContacts] = useState<ContactEntry[]>([]);
+  const [initialized, setInitialized] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newNumber, setNewNumber] = useState("");
 
-  const handleSave = async () => {
-    if (!value.trim()) {
-      toast.error("Please enter a WhatsApp number");
+  // Initialize from fetched data once
+  if (!initialized && !isLoading) {
+    setContacts(parseContacts(rawValue));
+    setInitialized(true);
+  }
+
+  const handleAdd = async () => {
+    if (!newLabel.trim() || !newNumber.trim()) {
+      toast.error("Please fill in both label and phone number");
       return;
     }
+    const cleaned = newNumber.replace(/\D/g, "");
+    if (!cleaned) {
+      toast.error("Invalid phone number");
+      return;
+    }
+    const updated = [...contacts, { label: newLabel.trim(), number: cleaned }];
     try {
-      await mutation.mutateAsync(value.trim());
-      toast.success("WhatsApp number saved!");
+      await mutation.mutateAsync(JSON.stringify(updated));
+      setContacts(updated);
+      setNewLabel("");
+      setNewNumber("");
+      toast.success("Contact added!");
     } catch {
-      toast.error("Failed to save");
+      toast.error("Failed to save contact");
+    }
+  };
+
+  const handleRemove = async (index: number) => {
+    const updated = contacts.filter((_, i) => i !== index);
+    try {
+      await mutation.mutateAsync(JSON.stringify(updated));
+      setContacts(updated);
+      toast.success("Contact removed");
+    } catch {
+      toast.error("Failed to remove contact");
     }
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="text-base">WhatsApp Number</CardTitle>
-        <CardDescription>
-          Include country code — e.g. <strong>919876543210</strong> for India
-          (+91). Customers will click this to contact you.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Loading...</span>
-          </div>
-        ) : (
-          <>
-            {current && (
-              <div className="bg-secondary/30 rounded-lg px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-1">
-                  Current number
-                </p>
-                <p className="font-medium">{current}</p>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">Enter Number</Label>
-              <Input
-                id="whatsapp"
-                placeholder="919876543210"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
+    <div className="space-y-6">
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-base">Contact Numbers</CardTitle>
+          <CardDescription>
+            These numbers appear on the Contact page. Customers tap them to chat
+            on WhatsApp.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Loading...</span>
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={mutation.isPending}
-              className="w-full"
-            >
-              {mutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {mutation.isPending ? "Saving..." : "Save Number"}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          ) : contacts.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              No contacts yet. Add your first number below.
+            </p>
+          ) : (
+            <div className="space-y-2" data-ocid="admin.contacts.list">
+              {contacts.map((c, i) => (
+                <div
+                  key={`${c.label}-${c.number}`}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20"
+                  data-ocid={`admin.contacts.item.${i + 1}`}
+                >
+                  <div className="w-9 h-9 bg-[#25D366]/10 border border-[#25D366]/20 rounded-full flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4 text-[#25D366]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs tracking-widest uppercase text-muted-foreground">
+                      {c.label}
+                    </p>
+                    <p className="font-medium text-sm">+{c.number}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemove(i)}
+                    disabled={mutation.isPending}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                    data-ocid={`admin.contacts.delete_button.${i + 1}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-base">Add Contact Number</CardTitle>
+          <CardDescription>
+            Add a label (e.g. "Orders", "Support") and the full number with
+            country code (e.g. 919876543210 for India).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="contact-label">Label *</Label>
+            <Input
+              id="contact-label"
+              placeholder="e.g. Orders, Support, General"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              data-ocid="admin.contacts.input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact-number">
+              Phone Number (with country code) *
+            </Label>
+            <Input
+              id="contact-number"
+              placeholder="e.g. 919876543210"
+              value={newNumber}
+              onChange={(e) => setNewNumber(e.target.value)}
+              data-ocid="admin.contacts.input"
+            />
+            <p className="text-xs text-muted-foreground">
+              For India: start with 91 followed by the 10-digit number.
+            </p>
+          </div>
+          <Button
+            onClick={handleAdd}
+            disabled={mutation.isPending}
+            className="w-full"
+            data-ocid="admin.contacts.submit_button"
+          >
+            {mutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" />
+            )}
+            {mutation.isPending ? "Saving..." : "Add Contact"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -614,6 +777,7 @@ function PaymentQRTab() {
                 onClick={handleUpload}
                 disabled={uploading || mutation.isPending || !selectedFile}
                 className="w-full"
+                data-ocid="admin.payment.submit_button"
               >
                 {uploading || mutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

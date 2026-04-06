@@ -20,6 +20,8 @@ export interface Tshirt {
     imageKey: string;
     price: string;
     deliveryCharge: string;
+    sizes: Array<string>;
+    stock: bigint;
 }
 export interface backendInterface {
     addTshirt(tshirt: Tshirt): Promise<void>;

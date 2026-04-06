@@ -6,17 +6,20 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { CartProvider } from "./context/CartContext";
 import AdminPage from "./pages/AdminPage";
+import CartPage from "./pages/CartPage";
+import ContactPage from "./pages/ContactPage";
 import DesignDetailPage from "./pages/DesignDetailPage";
 import HomePage from "./pages/HomePage";
 import PaymentPage from "./pages/PaymentPage";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <>
+    <CartProvider>
       <Outlet />
       <Toaster />
-    </>
+    </CartProvider>
   ),
 });
 
@@ -44,11 +47,25 @@ const designDetailRoute = createRoute({
   component: DesignDetailPage,
 });
 
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cart",
+  component: CartPage,
+});
+
+const contactRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/contact",
+  component: ContactPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   paymentRoute,
   adminRoute,
   designDetailRoute,
+  cartRoute,
+  contactRoute,
 ]);
 
 const router = createRouter({ routeTree });

@@ -16,8 +16,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['BricolageGrotesque', 'sans-serif'],
-        body: ['Satoshi', 'sans-serif'],
+        display: ["PlayfairDisplay", "serif"],
+        body: ["GeneralSans", "sans-serif"],
+        sans: ["GeneralSans", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -78,6 +79,7 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
+        card: "0 2px 12px -2px rgba(0,0,0,0.08)",
       },
       keyframes: {
         "accordion-down": {

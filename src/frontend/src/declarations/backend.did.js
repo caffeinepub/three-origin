@@ -23,6 +23,8 @@ export const Tshirt = IDL.Record({
   'deliveryCharge' : IDL.Text,
   'name' : IDL.Text,
   'description' : IDL.Text,
+  'sizes' : IDL.Vec(IDL.Text),
+  'stock' : IDL.Nat,
   'imageKey' : IDL.Text,
   'price' : IDL.Text,
 });
@@ -101,6 +103,8 @@ export const idlFactory = ({ IDL }) => {
     'deliveryCharge' : IDL.Text,
     'name' : IDL.Text,
     'description' : IDL.Text,
+    'sizes' : IDL.Vec(IDL.Text),
+    'stock' : IDL.Nat,
     'imageKey' : IDL.Text,
     'price' : IDL.Text,
   });

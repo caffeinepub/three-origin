@@ -15,6 +15,8 @@ export interface Tshirt {
   'deliveryCharge' : string,
   'name' : string,
   'description' : string,
+  'sizes' : Array<string>,
+  'stock' : bigint,
   'imageKey' : string,
   'price' : string,
 }

@@ -1,10 +1,11 @@
 import Map "mo:core/Map";
 import Text "mo:core/Text";
+import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 
-import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
+import MixinStorage "blob-storage/Mixin";
 
 
 
@@ -17,6 +18,8 @@ actor {
     imageKey : Text;
     price : Text;
     deliveryCharge : Text;
+    sizes : [Text];
+    stock : Nat;
   };
 
   module Tshirt {
