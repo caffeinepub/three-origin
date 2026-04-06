@@ -5,14 +5,14 @@ import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import List "mo:core/List";
 import Principal "mo:core/Principal";
-import Migration "migration";
+
 
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-(with migration = Migration.run)
+
 actor {
   // Initialize access control
   let accessControlState = AccessControl.initState();

@@ -156,16 +156,16 @@ export default function HomePage() {
           className="relative min-h-[70vh] flex flex-col items-center justify-center bg-cover bg-center text-center px-4"
           style={{
             backgroundImage:
-              "url('/assets/generated/hero-bg-fashion.dim_1600x900.jpg')",
+              "url('/assets/generated/hero-bg-luxury.dim_1920x1080.jpg')",
           }}
         >
-          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 max-w-2xl mx-auto">
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-white/60 text-xs font-bold tracking-[0.4em] uppercase mb-4"
+              className="text-amber-300/80 text-xs font-bold tracking-[0.4em] uppercase mb-4"
             >
               Collection 2026
             </motion.p>
@@ -196,7 +196,7 @@ export default function HomePage() {
             >
               <a
                 href="#shop"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:opacity-90 transition-opacity"
+                className="inline-flex items-center justify-center gap-2 bg-amber-500 text-black font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-amber-400 transition-colors"
                 data-ocid="hero.primary_button"
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function HomePage() {
               </a>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-white/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-amber-400/50 text-amber-200 font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-amber-400/10 transition-colors"
                 data-ocid="hero.secondary_button"
               >
                 Contact Us
@@ -219,7 +219,7 @@ export default function HomePage() {
             transition={{ delay: 1 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
-            <div className="w-px h-12 bg-gradient-to-b from-white/30 to-transparent mx-auto" />
+            <div className="w-px h-12 bg-gradient-to-b from-amber-400/40 to-transparent mx-auto" />
           </motion.div>
         </section>
 
