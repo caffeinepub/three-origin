@@ -18,17 +18,17 @@ export default function CartPage() {
 
   function buildCartWhatsapp() {
     if (items.length === 0) return "#";
+
     const lines = items
       .map((item) => {
-        const colorPart = item.selectedColor
-          ? `, Color: ${item.selectedColor}`
+        const colorLine = item.selectedColor
+          ? `\nColour: ${item.selectedColor}`
           : "";
-        return `• ${item.name} (Size: ${item.selectedSize}${colorPart}, Qty: ${item.quantity}) — ${item.price}`;
+        return `Product: ${item.name}\nPrice: ${item.price}\nSize: ${item.selectedSize}${colorLine}\nQuantity: ${item.quantity}`;
       })
-      .join("\n");
-    const msg = encodeURIComponent(
-      `Hi! I'd like to order from Three Origin:\n\n${lines}\n\nPlease confirm availability and total charges.`,
-    );
+      .join("\n\n---\n\n");
+
+    const msg = encodeURIComponent(lines);
     return `https://wa.me/${whatsappNumber}?text=${msg}`;
   }
 

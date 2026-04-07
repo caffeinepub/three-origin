@@ -105,16 +105,24 @@ function buildWhatsappMessage(
   whatsapp: string,
   name: string,
   price: string,
-  delivery: string,
+  description: string,
   imageUrl: string,
   size: string,
   quantity: number,
   color?: string | null,
 ) {
   const clean = whatsapp.replace(/\D/g, "") || FALLBACK_NUMBER;
-  const colorLine = color ? `\nColor: ${color}` : "";
+
+  // Truncate description to 1-2 lines max (120 chars)
+  const shortDesc =
+    description.length > 120
+      ? `${description.slice(0, 117).trimEnd()}...`
+      : description;
+
+  const colorLine = color ? `\nColour: ${color}` : "";
+
   const msg = encodeURIComponent(
-    `${imageUrl}\n\nHi! I'd like to order the "${name}" t-shirt from Three Origin.\n\nSize: ${size}${colorLine}\nQuantity: ${quantity}\nItem Price: ${price}\nDelivery Charge: ${delivery}\n\nPlease confirm availability and provide payment details.`,
+    `${imageUrl}\n\nProduct: ${name}\nPrice: ${price}\nDescription: ${shortDesc}\nSize: ${size}${colorLine}\nQuantity: ${quantity}`,
   );
   return `https://wa.me/${clean}?text=${msg}`;
 }
@@ -168,7 +176,7 @@ export default function DesignDetailPage() {
           whatsappNumber,
           tshirt.name,
           tshirt.price ?? "",
-          tshirt.deliveryCharge ?? "",
+          tshirt.description ?? "",
           absoluteImageUrl,
           selectedSize,
           quantity,
