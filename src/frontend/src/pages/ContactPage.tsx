@@ -3,30 +3,10 @@ import { MessageCircle, Phone } from "lucide-react";
 import { motion } from "motion/react";
 import { SiWhatsapp } from "react-icons/si";
 import Header from "../components/Header";
-import { useWhatsappNumber } from "../hooks/useQueries";
-
-interface ContactEntry {
-  label: string;
-  number: string;
-}
-
-function parseContacts(raw: string): ContactEntry[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as ContactEntry[];
-  } catch {
-    // not JSON
-  }
-  // Legacy: plain number string
-  const clean = raw.replace(/\D/g, "");
-  if (clean) return [{ label: "WhatsApp", number: clean }];
-  return [];
-}
+import { useContacts } from "../hooks/useQueries";
 
 export default function ContactPage() {
-  const { data: rawNumber } = useWhatsappNumber();
-  const contacts = parseContacts(rawNumber ?? "");
+  const { data: contacts = [], isLoading } = useContacts();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -53,18 +33,20 @@ export default function ContactPage() {
             to chat? Reach us directly on WhatsApp — we're always happy to help.
           </p>
 
-          {/* Contact Cards */}
-          {contacts.length > 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : contacts.length > 0 ? (
             <div className="space-y-4 mb-6" data-ocid="contact.list">
               {contacts.map((contact, i) => {
                 const waLink = `https://wa.me/${contact.number}?text=${encodeURIComponent("Hi! I'd like to know more about Three Origin.")}`;
                 const displayNum = contact.number
                   ? `+${contact.number}`
                   : "Contact Us";
-                const cardKey = `${contact.label}-${contact.number}`;
                 return (
                   <motion.div
-                    key={cardKey}
+                    key={contact.contactLabel}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: i * 0.08 }}
@@ -77,7 +59,7 @@ export default function ContactPage() {
                       </div>
                       <div className="text-left flex-1">
                         <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
-                          {contact.label}
+                          {contact.contactLabel}
                         </p>
                         <p className="font-display font-bold text-lg">
                           {displayNum}

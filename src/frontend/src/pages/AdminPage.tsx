@@ -27,37 +27,19 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import Header from "../components/Header";
 import {
+  useAddContact,
   useAddTshirt,
   useAllTshirts,
+  useContacts,
   usePaymentQR,
+  useRemoveContact,
   useRemoveTshirt,
   useSetPaymentQR,
-  useSetWhatsapp,
   useUpdateTshirt,
-  useWhatsappNumber,
 } from "../hooks/useQueries";
 import { useStorageClient } from "../hooks/useStorageClient";
 
 const ADMIN_PASSWORD = "OBS1314";
-
-interface ContactEntry {
-  label: string;
-  number: string;
-}
-
-function parseContacts(raw: string): ContactEntry[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as ContactEntry[];
-  } catch {
-    // not JSON
-  }
-  // Legacy: plain number string
-  const clean = raw.replace(/\D/g, "");
-  if (clean) return [{ label: "WhatsApp", number: clean }];
-  return [];
-}
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(
@@ -380,7 +362,6 @@ function DesignsTab() {
                 placeholder="e.g. ₹499"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                data-ocid="admin.designs.input"
               />
             </div>
             <div className="space-y-2">
@@ -390,7 +371,6 @@ function DesignsTab() {
                 placeholder="e.g. ₹50"
                 value={deliveryCharge}
                 onChange={(e) => setDeliveryCharge(e.target.value)}
-                data-ocid="admin.designs.input"
               />
             </div>
           </div>
@@ -403,7 +383,6 @@ function DesignsTab() {
               placeholder="e.g. S, M, L, XL, XXL"
               value={sizes}
               onChange={(e) => setSizes(e.target.value)}
-              data-ocid="admin.sizes.input"
             />
           </div>
           <div className="space-y-2">
@@ -415,7 +394,6 @@ function DesignsTab() {
               placeholder="e.g. Black, White, Red, Navy Blue"
               value={colors}
               onChange={(e) => setColors(e.target.value)}
-              data-ocid="admin.colors.input"
             />
             <p className="text-xs text-muted-foreground">
               Leave empty if no color options for this design.
@@ -430,7 +408,6 @@ function DesignsTab() {
               placeholder="e.g. 50"
               value={stock}
               onChange={(e) => setStock(e.target.value)}
-              data-ocid="admin.stock.input"
             />
           </div>
           <div className="space-y-2">
@@ -732,19 +709,12 @@ function TshirtRow({
 }
 
 function ContactsTab() {
-  const { data: rawValue = "", isLoading } = useWhatsappNumber();
-  const mutation = useSetWhatsapp();
+  const { data: contacts = [], isLoading } = useContacts();
+  const addContactMutation = useAddContact();
+  const removeContactMutation = useRemoveContact();
 
-  const [contacts, setContacts] = useState<ContactEntry[]>([]);
-  const [initialized, setInitialized] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newNumber, setNewNumber] = useState("");
-
-  // Initialize from fetched data once
-  if (!initialized && !isLoading) {
-    setContacts(parseContacts(rawValue));
-    setInitialized(true);
-  }
 
   const handleAdd = async () => {
     if (!newLabel.trim() || !newNumber.trim()) {
@@ -756,26 +726,34 @@ function ContactsTab() {
       toast.error("Invalid phone number");
       return;
     }
-    const updated = [...contacts, { label: newLabel.trim(), number: cleaned }];
+    // Check for duplicate label
+    if (contacts.some((c) => c.contactLabel === newLabel.trim())) {
+      toast.error(
+        "A contact with this label already exists. Use a different label.",
+      );
+      return;
+    }
     try {
-      await mutation.mutateAsync(JSON.stringify(updated));
-      setContacts(updated);
+      await addContactMutation.mutateAsync({
+        contactLabel: newLabel.trim(),
+        number: cleaned,
+      });
       setNewLabel("");
       setNewNumber("");
       toast.success("Contact added!");
-    } catch {
-      toast.error("Failed to save contact");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Failed to save contact: ${msg}`);
     }
   };
 
-  const handleRemove = async (index: number) => {
-    const updated = contacts.filter((_, i) => i !== index);
+  const handleRemove = async (contactLabel: string) => {
     try {
-      await mutation.mutateAsync(JSON.stringify(updated));
-      setContacts(updated);
+      await removeContactMutation.mutateAsync(contactLabel);
       toast.success("Contact removed");
-    } catch {
-      toast.error("Failed to remove contact");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Failed to remove contact: ${msg}`);
     }
   };
 
@@ -803,7 +781,7 @@ function ContactsTab() {
             <div className="space-y-2" data-ocid="admin.contacts.list">
               {contacts.map((c, i) => (
                 <div
-                  key={`${c.label}-${c.number}`}
+                  key={c.contactLabel}
                   className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20"
                   data-ocid={`admin.contacts.item.${i + 1}`}
                 >
@@ -812,15 +790,15 @@ function ContactsTab() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs tracking-widest uppercase text-muted-foreground">
-                      {c.label}
+                      {c.contactLabel}
                     </p>
                     <p className="font-medium text-sm">+{c.number}</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemove(i)}
-                    disabled={mutation.isPending}
+                    onClick={() => handleRemove(c.contactLabel)}
+                    disabled={removeContactMutation.isPending}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                     data-ocid={`admin.contacts.delete_button.${i + 1}`}
                   >
@@ -869,16 +847,16 @@ function ContactsTab() {
           </div>
           <Button
             onClick={handleAdd}
-            disabled={mutation.isPending}
+            disabled={addContactMutation.isPending}
             className="w-full"
             data-ocid="admin.contacts.submit_button"
           >
-            {mutation.isPending ? (
+            {addContactMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Plus className="mr-2 h-4 w-4" />
             )}
-            {mutation.isPending ? "Saving..." : "Add Contact"}
+            {addContactMutation.isPending ? "Saving..." : "Add Contact"}
           </Button>
         </CardContent>
       </Card>
@@ -914,8 +892,9 @@ function PaymentQRTab() {
       setSelectedFile(null);
       setPreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch {
-      toast.error("Failed to upload QR code");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Failed to upload QR code: ${msg}`);
     } finally {
       setUploading(false);
     }

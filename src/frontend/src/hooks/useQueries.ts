@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalBlob } from "../backend";
-import type { Tshirt } from "../backend.d";
+import type { Contact, Tshirt } from "../backend.d";
 import { useActor } from "./useActor";
 
 export function useAllTshirts() {
@@ -25,6 +25,22 @@ export function useWhatsappNumber() {
         return await actor.getWhatsappNumber();
       } catch {
         return "";
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useContacts() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Contact[]>({
+    queryKey: ["contacts"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getContacts();
+      } catch {
+        return [];
       }
     },
     enabled: !!actor && !isFetching,
@@ -105,6 +121,36 @@ export function useSetWhatsapp() {
       return actor.setWhatsappNumber(number);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["whatsapp"] }),
+  });
+}
+
+export function useAddContact() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (contact: Contact) => {
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
+      return actor.addContact(contact);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts"] }),
+  });
+}
+
+export function useRemoveContact() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (contactLabel: string) => {
+      if (!actor)
+        throw new Error(
+          "Backend not ready — please wait a moment and try again",
+        );
+      return actor.removeContact(contactLabel);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contacts"] }),
   });
 }
 
