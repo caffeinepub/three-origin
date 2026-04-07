@@ -37,7 +37,6 @@ import {
   useSetPaymentQR,
   useUpdateTshirt,
 } from "../hooks/useQueries";
-import { useStorageClient } from "../hooks/useStorageClient";
 
 const ADMIN_PASSWORD = "OBS1314";
 
@@ -204,7 +203,6 @@ function DesignsTab() {
   const { data: tshirts = [], isLoading } = useAllTshirts();
   const removeMutation = useRemoveTshirt();
   const addMutation = useAddTshirt();
-  const storageClient = useStorageClient();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -215,7 +213,6 @@ function DesignsTab() {
   const [stock, setStock] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,15 +235,13 @@ function DesignsTab() {
       toast.error("Stock must be a number");
       return;
     }
-    if (!storageClient) {
-      toast.error("Storage not ready, please try again");
-      return;
-    }
-    setUploading(true);
     try {
-      const bytes = new Uint8Array(await imageFile.arrayBuffer());
-      const { hash } = await storageClient.putFile(bytes);
-      const imageKey = await storageClient.getDirectURL(hash);
+      const imageKey = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(imageFile);
+      });
       await addMutation.mutateAsync({
         name: name.trim(),
         description: description.trim(),
@@ -284,8 +279,6 @@ function DesignsTab() {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error(`Failed to add design: ${msg}`);
       console.error("addTshirt error:", err);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -440,20 +433,16 @@ function DesignsTab() {
           </div>
           <Button
             onClick={handleAddTshirt}
-            disabled={uploading || addMutation.isPending}
+            disabled={addMutation.isPending}
             className="w-full"
             data-ocid="admin.designs.submit_button"
           >
-            {uploading || addMutation.isPending ? (
+            {addMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
-            {uploading
-              ? "Processing photo..."
-              : addMutation.isPending
-                ? "Saving..."
-                : "Add Design"}
+            {addMutation.isPending ? "Saving..." : "Add Design"}
           </Button>
         </CardContent>
       </Card>
