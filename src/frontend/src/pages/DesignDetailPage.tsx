@@ -133,7 +133,6 @@ export default function DesignDetailPage() {
 
   const { data: tshirts } = useAllTshirts();
   const { data: rawNumber } = useWhatsappNumber();
-  const whatsappNumber = rawNumber ?? FALLBACK_NUMBER;
   const { addToCart } = useCart();
 
   const [selectedSize, setSelectedSize] = useState("");
@@ -170,20 +169,6 @@ export default function DesignDetailPage() {
     ? calcTotal(tshirt.price ?? "", tshirt.deliveryCharge ?? "")
     : "—";
 
-  const waLink =
-    tshirt && selectedSize
-      ? buildWhatsappMessage(
-          whatsappNumber,
-          tshirt.name,
-          tshirt.price ?? "",
-          tshirt.description ?? "",
-          absoluteImageUrl,
-          selectedSize,
-          quantity,
-          selectedColor,
-        )
-      : "#";
-
   function handleAddToCart() {
     if (!tshirt) return;
     if (!selectedSize) {
@@ -208,7 +193,22 @@ export default function DesignDetailPage() {
       toast.error("Please select a size before ordering");
       return;
     }
-    window.open(waLink, "_blank", "noopener,noreferrer");
+    if (!tshirt) {
+      toast.error("Product not found. Please try again.");
+      return;
+    }
+    const number = (rawNumber ?? "").replace(/\D/g, "") || FALLBACK_NUMBER;
+    const link = buildWhatsappMessage(
+      number,
+      tshirt.name,
+      tshirt.price ?? "",
+      tshirt.description ?? "",
+      absoluteImageUrl,
+      selectedSize,
+      quantity,
+      selectedColor,
+    );
+    window.open(link, "_blank", "noopener,noreferrer");
   }
 
   return (

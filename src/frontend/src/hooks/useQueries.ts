@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalBlob } from "../backend";
-import type { Contact, Tshirt } from "../backend.d";
+import type { Contact, Tshirt } from "../types";
 import { useActor } from "./useActor";
 
 export function useAllTshirts() {

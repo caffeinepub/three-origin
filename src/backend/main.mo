@@ -5,18 +5,13 @@ import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 
-import Storage "blob-storage/Storage";
-import MixinStorage "blob-storage/Mixin";
-import AccessControl "authorization/access-control";
-import MixinAuthorization "authorization/MixinAuthorization";
-
-
 actor {
-  // Initialize access control
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
-  
-  include MixinStorage();
+  // Migration: preserve accessControlState from previous version (will be unused)
+  type UserRole = { #admin; #guest; #user };
+  stable var accessControlState : { var adminAssigned : Bool; userRoles : Map.Map<Principal, UserRole> } = {
+    var adminAssigned = false;
+    userRoles = Map.empty<Principal, UserRole>();
+  };
 
   type Tshirt = {
     name : Text;
@@ -37,7 +32,7 @@ actor {
 
   let tshirts = Map.empty<Text, Tshirt>();
   var whatsappNumber : ?Text = null;
-  var paymentQR : ?Storage.ExternalBlob = null;
+  var paymentQR : ?Blob = null;
 
   type Contact = {
     contactLabel : Text;
@@ -45,24 +40,22 @@ actor {
   };
   let contactsMap = Map.empty<Text, Contact>();
 
-  // User profiles
+  // User profiles (kept for API compatibility)
   public type UserProfile = {
     name : Text;
   };
 
   let userProfiles = Map.empty<Principal, UserProfile>();
 
-  // User profile management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     userProfiles.get(caller);
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+  public query func getUserProfile(user : Principal) : async ?UserProfile {
     userProfiles.get(user);
   };
 
   public shared func saveCallerUserProfile(profile : UserProfile) : async () {
-    // no-op: not used in this app
     ignore profile;
   };
 
@@ -96,7 +89,7 @@ actor {
     };
   };
 
-  public query func getPaymentQR() : async Storage.ExternalBlob {
+  public query func getPaymentQR() : async Blob {
     switch (paymentQR) {
       case (null) { Runtime.trap("Payment QR not set") };
       case (?b) { b };
@@ -110,12 +103,10 @@ actor {
   // Product management - open to all callers (frontend password gate handles auth)
   public shared func addTshirt(tshirt : Tshirt) : async () {
     if (tshirt.name.size() > 100) { Runtime.trap("Name too long") };
-    // add() upserts: inserts or overwrites existing key
     tshirts.add(tshirt.name, tshirt);
   };
 
   public shared func updateTshirt(tshirt : Tshirt) : async () {
-    // add() upserts: always overwrites, never fails
     tshirts.add(tshirt.name, tshirt);
   };
 
@@ -128,7 +119,7 @@ actor {
     whatsappNumber := ?number;
   };
 
-  public shared func setPaymentQR(blob : Storage.ExternalBlob) : async () {
+  public shared func setPaymentQR(blob : Blob) : async () {
     paymentQR := ?blob;
   };
 

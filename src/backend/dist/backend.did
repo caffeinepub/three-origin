@@ -1,0 +1,35 @@
+type UserProfile = record {name: text;};
+type Tshirt = 
+ record {
+   colors: vec text;
+   deliveryCharge: text;
+   description: text;
+   imageKey: text;
+   name: text;
+   price: text;
+   sizes: vec text;
+   stock: nat;
+ };
+type Contact = 
+ record {
+   contactLabel: text;
+   number: text;
+ };
+service : {
+  addContact: (contact: Contact) -> ();
+  addTshirt: (tshirt: Tshirt) -> ();
+  getAllTshirts: () -> (vec Tshirt) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getContacts: () -> (vec Contact) query;
+  getPaymentQR: () -> (blob) query;
+  getTshirt: (name: text) -> (Tshirt) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  getWhatsappNumber: () -> (text) query;
+  removeContact: (contactLabel: text) -> ();
+  removeTshirt: (name: text) -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  searchTshirts: (term: text) -> (vec Tshirt) query;
+  setPaymentQR: ("blob": blob) -> ();
+  setWhatsappNumber: (number: text) -> ();
+  updateTshirt: (tshirt: Tshirt) -> ();
+}
