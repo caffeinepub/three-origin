@@ -109,17 +109,17 @@ export interface UserProfile {
 export interface backendInterface {
     addContact(contact: Contact): Promise<void>;
     addTshirt(tshirt: Tshirt): Promise<void>;
-    detectUserCurrency(userIp: string): Promise<string>;
+    detectUserCurrency(userIp: string): Promise<string | null>;
     getAllTshirts(): Promise<Array<Tshirt>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getContacts(): Promise<Array<Contact>>;
     getCurrencyRates(): Promise<string | null>;
-    getPaymentQR(): Promise<Uint8Array>;
+    getPaymentQR(): Promise<Uint8Array | null>;
     getRatesCachedAt(): Promise<bigint>;
-    getTshirt(name: string): Promise<Tshirt>;
+    getTshirt(name: string): Promise<Tshirt | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWhatsappNumber(): Promise<string>;
-    refreshExchangeRates(): Promise<string>;
+    refreshExchangeRates(): Promise<boolean>;
     removeContact(contactLabel: string): Promise<void>;
     removeTshirt(name: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
@@ -128,7 +128,7 @@ export interface backendInterface {
     setWhatsappNumber(number: string): Promise<void>;
     updateTshirt(tshirt: Tshirt): Promise<void>;
 }
-import type { UserProfile as _UserProfile } from "./declarations/backend.did.d.ts";
+import type { Tshirt as _Tshirt, UserProfile as _UserProfile } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async addContact(arg0: Contact): Promise<void> {
@@ -159,18 +159,18 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async detectUserCurrency(arg0: string): Promise<string> {
+    async detectUserCurrency(arg0: string): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.detectUserCurrency(arg0);
-                return result;
+                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.detectUserCurrency(arg0);
-            return result;
+            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllTshirts(): Promise<Array<Tshirt>> {
@@ -191,14 +191,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
         }
     }
     async getContacts(): Promise<Array<Contact>> {
@@ -219,28 +219,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCurrencyRates();
-                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCurrencyRates();
-            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getPaymentQR(): Promise<Uint8Array> {
+    async getPaymentQR(): Promise<Uint8Array | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPaymentQR();
-                return result;
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPaymentQR();
-            return result;
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRatesCachedAt(): Promise<bigint> {
@@ -257,32 +257,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getTshirt(arg0: string): Promise<Tshirt> {
+    async getTshirt(arg0: string): Promise<Tshirt | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getTshirt(arg0);
-                return result;
+                return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getTshirt(arg0);
-            return result;
+            return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
         }
     }
     async getWhatsappNumber(): Promise<string> {
@@ -299,7 +299,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async refreshExchangeRates(): Promise<string> {
+    async refreshExchangeRates(): Promise<boolean> {
         if (this.processError) {
             try {
                 const result = await this.actor.refreshExchangeRates();
@@ -412,10 +412,16 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Uint8Array]): Uint8Array | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Tshirt]): Tshirt | null {
     return value.length === 0 ? null : value[0];
 }
 export interface CreateActorOptions {

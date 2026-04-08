@@ -38,8 +38,7 @@ interface CurrencyContextValue {
 
 const CurrencyContext = createContext<CurrencyContextValue | null>(null);
 
-const RATES_TS_KEY = "three_origin_rates_ts";
-const CURRENCY_KEY = "three_origin_currency";
+const CURRENCY_KEY = "three-origin-currency";
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
 function parseRatesFromJson(json: string): Record<string, number> {
@@ -48,8 +47,12 @@ function parseRatesFromJson(json: string): Record<string, number> {
     if (parsed?.rates && typeof parsed.rates === "object") {
       return { INR: 1.0, ...parsed.rates };
     }
+    // Some APIs return the rates directly at the top level
+    if (typeof parsed === "object" && parsed !== null && !parsed.rates) {
+      return { INR: 1.0, ...(parsed as Record<string, number>) };
+    }
   } catch {
-    // ignore
+    // ignore parse errors
   }
   return { INR: 1.0 };
 }
@@ -62,7 +65,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   });
   const [isLoadingRates, setIsLoadingRates] = useState(false);
 
-  // Restore user currency preference
+  // Restore user currency preference on mount
   useEffect(() => {
     const saved = localStorage.getItem(CURRENCY_KEY) as CurrencyCode | null;
     if (saved && SUPPORTED_CURRENCIES.includes(saved)) {
@@ -70,67 +73,81 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Load rates and auto-detect currency on actor ready
+  // Load rates and auto-detect currency once actor is ready
   useEffect(() => {
     if (!actor || isFetching) return;
+
+    let cancelled = false;
 
     async function init() {
       if (!actor) return;
       setIsLoadingRates(true);
       try {
-        // Check if cached rates are fresh enough
-        const cachedAtResult = await actor.getRatesCachedAt();
-        const cachedAtMs = Number(cachedAtResult) / 1_000_000; // nanoseconds to ms
-        const now = Date.now();
-        const needsRefresh =
-          cachedAtMs === 0 || now - cachedAtMs > SIX_HOURS_MS;
-
+        // Try to get cached rates timestamp from backend
         let ratesJson: string | null = null;
 
-        if (needsRefresh) {
-          try {
-            ratesJson = await actor.refreshExchangeRates();
-            localStorage.setItem(RATES_TS_KEY, String(now));
-          } catch {
-            // Fall through to cached rates
+        try {
+          const cachedAtResult = await actor.getRatesCachedAt();
+          const cachedAtMs = Number(cachedAtResult) / 1_000_000; // nanoseconds → ms
+          const now = Date.now();
+          const needsRefresh =
+            cachedAtMs === 0 || now - cachedAtMs > SIX_HOURS_MS;
+
+          if (needsRefresh) {
+            try {
+              // refreshExchangeRates returns a string (the JSON) or error string
+              const refreshResult = await actor.refreshExchangeRates();
+              if (
+                refreshResult &&
+                refreshResult !== "error" &&
+                refreshResult.length > 10
+              ) {
+                ratesJson = refreshResult;
+              }
+            } catch {
+              // fall through to getCurrencyRates
+            }
           }
+
+          if (!ratesJson) {
+            // getCurrencyRates returns string | null (backend.ts already unwraps Option)
+            const cached = await actor.getCurrencyRates();
+            ratesJson = cached; // already string | null
+          }
+        } catch {
+          // backend might not support currency — stay with defaults
         }
 
-        if (!ratesJson) {
-          const cached = await actor.getCurrencyRates();
-          ratesJson =
-            Array.isArray(cached) && cached.length > 0
-              ? (cached[0] ?? null)
-              : null;
-        }
-
-        if (ratesJson) {
+        if (!cancelled && ratesJson) {
           setExchangeRates(parseRatesFromJson(ratesJson));
         }
 
-        // Auto-detect currency only if user hasn't set a preference
+        // Auto-detect currency only if user has no saved preference
         const savedCurrency = localStorage.getItem(CURRENCY_KEY);
         if (!savedCurrency) {
           try {
             const ipRes = await fetch("https://api.ipify.org?format=json");
             const { ip } = (await ipRes.json()) as { ip: string };
-            const detectedCurrency = await actor.detectUserCurrency(ip);
-            const code = detectedCurrency.toUpperCase() as CurrencyCode;
-            if (SUPPORTED_CURRENCIES.includes(code)) {
+            const detected = await actor.detectUserCurrency(ip);
+            const code = (detected ?? "").toUpperCase() as CurrencyCode;
+            if (!cancelled && SUPPORTED_CURRENCIES.includes(code)) {
               setSelectedCurrency(code);
             }
           } catch {
-            // Fallback to INR
+            // Fallback to INR — no action needed
           }
         }
       } catch {
-        // Fallback to INR with no conversion
+        // Silently fallback to INR with no conversion
       } finally {
-        setIsLoadingRates(false);
+        if (!cancelled) setIsLoadingRates(false);
       }
     }
 
     init();
+    return () => {
+      cancelled = true;
+    };
   }, [actor, isFetching]);
 
   const setCurrency = useCallback((c: CurrencyCode) => {

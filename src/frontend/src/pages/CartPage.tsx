@@ -32,7 +32,8 @@ export default function CartPage() {
       })
       .join("\n\n");
 
-    window.location.href = `https://wa.me/${clean}?text=${encodeURIComponent(lines)}`;
+    const url = `https://wa.me/${clean}?text=${encodeURIComponent(lines)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   const isEmpty = items.length === 0;

@@ -15,6 +15,7 @@ import {
   ImagePlus,
   Loader2,
   Lock,
+  MessageSquare,
   Pencil,
   Phone,
   Plus,
@@ -35,7 +36,9 @@ import {
   useRemoveContact,
   useRemoveTshirt,
   useSetPaymentQR,
+  useSetWhatsapp,
   useUpdateTshirt,
+  useWhatsappNumber,
 } from "../hooks/useQueries";
 
 const ADMIN_PASSWORD = "OBS1314";
@@ -156,16 +159,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </div>
 
             <Tabs defaultValue="designs">
-              <TabsList className="mb-6 bg-secondary w-full">
-                <TabsTrigger value="designs" className="flex-1">
-                  👕 Designs
-                </TabsTrigger>
-                <TabsTrigger value="contacts" className="flex-1">
-                  📞 Contacts
-                </TabsTrigger>
-                <TabsTrigger value="payment" className="flex-1">
-                  💳 Payment QR
-                </TabsTrigger>
+              <TabsList className="mb-6 bg-secondary w-full grid grid-cols-4">
+                <TabsTrigger value="designs">👕 Designs</TabsTrigger>
+                <TabsTrigger value="contacts">📞 Contacts</TabsTrigger>
+                <TabsTrigger value="payment">💳 QR Code</TabsTrigger>
+                <TabsTrigger value="settings">⚙️ Settings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="designs">
@@ -176,6 +174,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </TabsContent>
               <TabsContent value="payment">
                 <PaymentQRTab />
+              </TabsContent>
+              <TabsContent value="settings">
+                <SettingsTab />
               </TabsContent>
             </Tabs>
           </motion.div>
@@ -223,19 +224,25 @@ function DesignsTab() {
   };
 
   const handleAddTshirt = async () => {
-    if (!name.trim() || !imageFile) {
-      toast.error("Please fill in the name and upload an image");
+    if (!name.trim()) {
+      toast.error("Please fill in the design name");
+      return;
+    }
+    if (!imageFile) {
+      toast.error("Please upload a photo for this design");
       return;
     }
     if (!price.trim() || !deliveryCharge.trim()) {
       toast.error("Please fill in price and delivery charge");
       return;
     }
-    if (stock.trim() && Number.isNaN(Number.parseInt(stock.trim(), 10))) {
-      toast.error("Stock must be a number");
+    const stockNum = Number.parseInt(stock.trim() || "0", 10);
+    if (Number.isNaN(stockNum) || stockNum < 0) {
+      toast.error("Stock must be a valid number (0 or more)");
       return;
     }
     try {
+      // Convert image file to base64 data URL for storage
       const imageKey = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -262,9 +269,9 @@ function DesignsTab() {
               .map((c) => c.trim())
               .filter(Boolean)
           : [],
-        stock: BigInt(Number.parseInt(stock.trim() || "0", 10)),
+        stock: BigInt(stockNum),
       });
-      toast.success("Design added!");
+      toast.success("Design added successfully!");
       setName("");
       setDescription("");
       setPrice("");
@@ -295,7 +302,7 @@ function DesignsTab() {
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Loading...</span>
+              <span className="text-sm">Loading designs...</span>
             </div>
           ) : tshirts.length === 0 ? (
             <p className="text-muted-foreground text-sm">
@@ -706,26 +713,35 @@ function ContactsTab() {
   const [newNumber, setNewNumber] = useState("");
 
   const handleAdd = async () => {
-    if (!newLabel.trim() || !newNumber.trim()) {
+    const labelTrimmed = newLabel.trim();
+    const numberTrimmed = newNumber.trim();
+
+    if (!labelTrimmed || !numberTrimmed) {
       toast.error("Please fill in both label and phone number");
       return;
     }
-    const cleaned = newNumber.replace(/\D/g, "");
-    if (!cleaned) {
-      toast.error("Invalid phone number");
+
+    // Strip all non-digit characters for storage (wa.me needs pure digits)
+    const digitsOnly = numberTrimmed.replace(/\D/g, "");
+    if (!digitsOnly || digitsOnly.length < 7) {
+      toast.error(
+        "Please enter a valid phone number with country code (e.g. +919876543210)",
+      );
       return;
     }
+
     // Check for duplicate label
-    if (contacts.some((c) => c.contactLabel === newLabel.trim())) {
+    if (contacts.some((c) => c.contactLabel === labelTrimmed)) {
       toast.error(
         "A contact with this label already exists. Use a different label.",
       );
       return;
     }
+
     try {
       await addContactMutation.mutateAsync({
-        contactLabel: newLabel.trim(),
-        number: cleaned,
+        contactLabel: labelTrimmed,
+        number: digitsOnly,
       });
       setNewLabel("");
       setNewNumber("");
@@ -804,8 +820,8 @@ function ContactsTab() {
         <CardHeader>
           <CardTitle className="text-base">Add Contact Number</CardTitle>
           <CardDescription>
-            Add a label (e.g. "Orders", "Support") and the full number with
-            country code (e.g. 919876543210 for India).
+            Add a label (e.g. "Orders", "Support") and the full mobile number
+            with country code.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -816,7 +832,7 @@ function ContactsTab() {
               placeholder="e.g. Orders, Support, General"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
-              data-ocid="admin.contacts.input"
+              data-ocid="admin.contacts.label_input"
             />
           </div>
           <div className="space-y-2">
@@ -825,13 +841,15 @@ function ContactsTab() {
             </Label>
             <Input
               id="contact-number"
-              placeholder="e.g. 919876543210"
+              type="tel"
+              placeholder="+91XXXXXXXXXX"
               value={newNumber}
               onChange={(e) => setNewNumber(e.target.value)}
-              data-ocid="admin.contacts.input"
+              data-ocid="admin.contacts.number_input"
             />
             <p className="text-xs text-muted-foreground">
-              For India: start with 91 followed by the 10-digit number.
+              Include country code — e.g. +91 for India, +1 for USA. The + sign
+              and spaces are handled automatically.
             </p>
           </div>
           <Button
@@ -962,6 +980,107 @@ function PaymentQRTab() {
                   : "Upload QR Code"}
               </Button>
             </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SettingsTab() {
+  const { data: currentNumber = "", isLoading } = useWhatsappNumber();
+  const setWhatsappMutation = useSetWhatsapp();
+  const [whatsappInput, setWhatsappInput] = useState("");
+
+  const handleSave = async () => {
+    const trimmed = whatsappInput.trim();
+    if (!trimmed) {
+      toast.error("Please enter a WhatsApp number");
+      return;
+    }
+    // Strip all non-digit characters for storage
+    const digitsOnly = trimmed.replace(/\D/g, "");
+    if (!digitsOnly || digitsOnly.length < 7) {
+      toast.error(
+        "Please enter a valid WhatsApp number with country code (e.g. +919876543210)",
+      );
+      return;
+    }
+    try {
+      await setWhatsappMutation.mutateAsync(digitsOnly);
+      setWhatsappInput("");
+      toast.success("WhatsApp number saved!");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(`Failed to save: ${msg}`);
+    }
+  };
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-base">WhatsApp Number</CardTitle>
+        <CardDescription>
+          This is the number customers send orders to when they tap "Buy Now via
+          WhatsApp".
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading...</span>
+          </div>
+        ) : (
+          <>
+            {currentNumber && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20">
+                <div className="w-9 h-9 bg-[#25D366]/10 border border-[#25D366]/20 rounded-full flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4 text-[#25D366]" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    Current WhatsApp Number
+                  </p>
+                  <p className="font-medium text-sm">+{currentNumber}</p>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp-number">
+                {currentNumber
+                  ? "Update WhatsApp Number"
+                  : "Set WhatsApp Number"}{" "}
+                *
+              </Label>
+              <Input
+                id="whatsapp-number"
+                type="tel"
+                placeholder="+91XXXXXXXXXX"
+                value={whatsappInput}
+                onChange={(e) => setWhatsappInput(e.target.value)}
+                data-ocid="admin.settings.whatsapp_input"
+              />
+              <p className="text-xs text-muted-foreground">
+                Include country code — e.g. +91 for India. The + sign is handled
+                automatically.
+              </p>
+            </div>
+            <Button
+              onClick={handleSave}
+              disabled={setWhatsappMutation.isPending}
+              className="w-full"
+              data-ocid="admin.settings.submit_button"
+            >
+              {setWhatsappMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <MessageSquare className="mr-2 h-4 w-4" />
+              )}
+              {setWhatsappMutation.isPending
+                ? "Saving..."
+                : "Save WhatsApp Number"}
+            </Button>
           </>
         )}
       </CardContent>

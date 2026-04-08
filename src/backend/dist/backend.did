@@ -18,17 +18,17 @@ type Contact =
 service : {
   addContact: (contact: Contact) -> ();
   addTshirt: (tshirt: Tshirt) -> ();
-  detectUserCurrency: (userIp: text) -> (text);
+  detectUserCurrency: (userIp: text) -> (opt text);
   getAllTshirts: () -> (vec Tshirt) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getContacts: () -> (vec Contact) query;
   getCurrencyRates: () -> (opt text) query;
-  getPaymentQR: () -> (blob) query;
+  getPaymentQR: () -> (opt blob) query;
   getRatesCachedAt: () -> (int) query;
-  getTshirt: (name: text) -> (Tshirt) query;
+  getTshirt: (name: text) -> (opt Tshirt) query;
   getUserProfile: (user: principal) -> (opt UserProfile) query;
   getWhatsappNumber: () -> (text) query;
-  refreshExchangeRates: () -> (text);
+  refreshExchangeRates: () -> (bool);
   removeContact: (contactLabel: text) -> ();
   removeTshirt: (name: text) -> ();
   saveCallerUserProfile: (profile: UserProfile) -> ();

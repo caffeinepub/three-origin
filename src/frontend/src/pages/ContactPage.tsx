@@ -40,7 +40,9 @@ export default function ContactPage() {
           ) : contacts.length > 0 ? (
             <div className="space-y-4 mb-6" data-ocid="contact.list">
               {contacts.map((contact, i) => {
-                const waLink = `https://wa.me/${contact.number}?text=${encodeURIComponent("Hi! I'd like to know more about Three Origin.")}`;
+                // numbers are stored as digits-only (e.g. 919876543210)
+                const digitsOnly = contact.number.replace(/\D/g, "");
+                const waLink = `https://wa.me/${digitsOnly}?text=${encodeURIComponent("Hi! I'd like to know more about Three Origin.")}`;
                 const displayNum = contact.number
                   ? `+${contact.number}`
                   : "Contact Us";

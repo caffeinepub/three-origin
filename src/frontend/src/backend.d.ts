@@ -27,17 +27,17 @@ export interface UserProfile {
 export interface backendInterface {
     addContact(contact: Contact): Promise<void>;
     addTshirt(tshirt: Tshirt): Promise<void>;
-    detectUserCurrency(userIp: string): Promise<string>;
+    detectUserCurrency(userIp: string): Promise<string | null>;
     getAllTshirts(): Promise<Array<Tshirt>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getContacts(): Promise<Array<Contact>>;
     getCurrencyRates(): Promise<string | null>;
-    getPaymentQR(): Promise<Uint8Array>;
+    getPaymentQR(): Promise<Uint8Array | null>;
     getRatesCachedAt(): Promise<bigint>;
-    getTshirt(name: string): Promise<Tshirt>;
+    getTshirt(name: string): Promise<Tshirt | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWhatsappNumber(): Promise<string>;
-    refreshExchangeRates(): Promise<string>;
+    refreshExchangeRates(): Promise<boolean>;
     removeContact(contactLabel: string): Promise<void>;
     removeTshirt(name: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;

@@ -167,7 +167,8 @@ export default function DesignDetailPage() {
 
     const message = `Product: ${tshirt.name}\nPrice: ${tshirt.price}\nSize: ${selectedSize}${colorLine}\nQuantity: ${quantity}`;
 
-    window.location.href = `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   return (
