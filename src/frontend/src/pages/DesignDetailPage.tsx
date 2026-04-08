@@ -17,9 +17,9 @@ import { SiWhatsapp } from "react-icons/si";
 import { toast } from "sonner";
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
+import { parseInrPrice, useCurrency } from "../context/CurrencyContext";
 import { useAllTshirts, useWhatsappNumber } from "../hooks/useQueries";
 
-const FALLBACK_NUMBER = "919876543210";
 const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"];
 
 const FALLBACK_TSHIRTS = [
@@ -93,40 +93,6 @@ const REVIEWS = [
   },
 ];
 
-function calcTotal(price: string, delivery: string): string {
-  const p = Number.parseFloat(price.replace(/[^\d.]/g, ""));
-  const d = Number.parseFloat(delivery.replace(/[^\d.]/g, ""));
-  if (Number.isNaN(p) || Number.isNaN(d)) return "—";
-  const sym = price.match(/[^\d.,\s]+/)?.[0] ?? "";
-  return `${sym}${(p + d).toFixed(0)}`;
-}
-
-function buildWhatsappMessage(
-  whatsapp: string,
-  name: string,
-  price: string,
-  description: string,
-  imageUrl: string,
-  size: string,
-  quantity: number,
-  color?: string | null,
-) {
-  const clean = whatsapp.replace(/\D/g, "") || FALLBACK_NUMBER;
-
-  // Truncate description to 1-2 lines max (120 chars)
-  const shortDesc =
-    description.length > 120
-      ? `${description.slice(0, 117).trimEnd()}...`
-      : description;
-
-  const colorLine = color ? `\nColour: ${color}` : "";
-
-  const msg = encodeURIComponent(
-    `${imageUrl}\n\nProduct: ${name}\nPrice: ${price}\nDescription: ${shortDesc}\nSize: ${size}${colorLine}\nQuantity: ${quantity}`,
-  );
-  return `https://wa.me/${clean}?text=${msg}`;
-}
-
 export default function DesignDetailPage() {
   const { name } = useParams({ strict: false }) as { name: string };
   const decodedName = decodeURIComponent(name ?? "");
@@ -134,6 +100,7 @@ export default function DesignDetailPage() {
   const { data: tshirts } = useAllTshirts();
   const { data: rawNumber } = useWhatsappNumber();
   const { addToCart } = useCart();
+  const { formatPrice, selectedCurrency } = useCurrency();
 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -141,7 +108,6 @@ export default function DesignDetailPage() {
 
   const backendTshirt = tshirts?.find((t) => t.name === decodedName);
   const fallbackTshirt = FALLBACK_TSHIRTS.find((t) => t.name === decodedName);
-
   const tshirt = backendTshirt ?? fallbackTshirt ?? null;
 
   const sizes =
@@ -149,7 +115,6 @@ export default function DesignDetailPage() {
   const colors =
     tshirt?.colors && tshirt.colors.length > 0 ? tshirt.colors : [];
 
-  // Auto-select first color when tshirt data loads
   useEffect(() => {
     if (colors.length > 0 && selectedColor === null) {
       setSelectedColor(colors[0]);
@@ -159,15 +124,12 @@ export default function DesignDetailPage() {
   const isOutOfStock =
     tshirt?.stock !== undefined && Number(tshirt.stock) === 0;
 
-  const absoluteImageUrl = tshirt?.imageKey
-    ? tshirt.imageKey.startsWith("http")
-      ? tshirt.imageKey
-      : `${window.location.origin}${tshirt.imageKey}`
-    : window.location.href;
-
-  const total = tshirt
-    ? calcTotal(tshirt.price ?? "", tshirt.deliveryCharge ?? "")
-    : "—";
+  const inrPrice = parseInrPrice(tshirt?.price ?? "0");
+  const inrDelivery = parseInrPrice(tshirt?.deliveryCharge ?? "0");
+  const displayPrice = formatPrice(inrPrice);
+  const displayDelivery = formatPrice(inrDelivery);
+  const displayTotal = formatPrice(inrPrice + inrDelivery);
+  const showInrSub = selectedCurrency !== "INR" && inrPrice > 0;
 
   function handleAddToCart() {
     if (!tshirt) return;
@@ -188,27 +150,24 @@ export default function DesignDetailPage() {
     toast.success(`${tshirt.name} (${selectedSize}${colorMsg}) added to cart!`);
   }
 
-  function handleBuyNow() {
+  function handleBuyNowWhatsApp() {
     if (!selectedSize) {
       toast.error("Please select a size before ordering");
       return;
     }
-    if (!tshirt) {
-      toast.error("Product not found. Please try again.");
+    if (!tshirt) return;
+
+    const clean = (rawNumber ?? "").replace(/\D/g, "");
+    if (!clean) {
+      alert("WhatsApp number not set. Please contact admin.");
       return;
     }
-    const number = (rawNumber ?? "").replace(/\D/g, "") || FALLBACK_NUMBER;
-    const link = buildWhatsappMessage(
-      number,
-      tshirt.name,
-      tshirt.price ?? "",
-      tshirt.description ?? "",
-      absoluteImageUrl,
-      selectedSize,
-      quantity,
-      selectedColor,
-    );
-    window.open(link, "_blank", "noopener,noreferrer");
+
+    const colorLine = selectedColor ? `\nColour: ${selectedColor}` : "";
+
+    const message = `Product: ${tshirt.name}\nPrice: ${tshirt.price}\nSize: ${selectedSize}${colorLine}\nQuantity: ${quantity}`;
+
+    window.location.href = `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
   }
 
   return (
@@ -285,15 +244,20 @@ export default function DesignDetailPage() {
                   <h1 className="font-display font-extrabold text-3xl sm:text-4xl uppercase tracking-tight mb-3">
                     {tshirt.name}
                   </h1>
-                  <div className="flex items-baseline gap-3 mb-4">
-                    <span className="font-bold text-2xl">{tshirt.price}</span>
+                  <div className="flex items-baseline gap-3 mb-1">
+                    <span className="font-bold text-2xl">{displayPrice}</span>
                     {tshirt.deliveryCharge && (
                       <span className="text-muted-foreground text-sm">
-                        + {tshirt.deliveryCharge} delivery
+                        + {displayDelivery} delivery
                       </span>
                     )}
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  {showInrSub && (
+                    <p className="text-muted-foreground text-xs mb-3">
+                      ₹{inrPrice} INR
+                    </p>
+                  )}
+                  <p className="text-muted-foreground text-sm leading-relaxed mt-3">
                     {tshirt.description}
                   </p>
                 </div>
@@ -351,7 +315,7 @@ export default function DesignDetailPage() {
                   </div>
                 </div>
 
-                {/* Color Selector — only when colors are available */}
+                {/* Color Selector */}
                 {colors.length > 0 && (
                   <div data-ocid="design_detail.panel">
                     <p className="text-xs tracking-[0.25em] uppercase text-muted-foreground mb-3">
@@ -438,12 +402,12 @@ export default function DesignDetailPage() {
                       Add to Cart
                     </Button>
                     <Button
-                      onClick={handleBuyNow}
+                      onClick={handleBuyNowWhatsApp}
                       className="flex-1 h-12 text-sm font-bold tracking-wider uppercase rounded-full bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 flex items-center gap-2"
                       data-ocid="design_detail.primary_button"
                     >
                       <SiWhatsapp className="w-4 h-4" />
-                      Buy Now
+                      Buy Now via WhatsApp
                     </Button>
                   </div>
                 )}
@@ -462,7 +426,7 @@ export default function DesignDetailPage() {
                     </p>
                     {tshirt.deliveryCharge && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Estimated delivery: {tshirt.deliveryCharge}
+                        Estimated delivery: {displayDelivery}
                       </p>
                     )}
                   </div>
@@ -479,16 +443,14 @@ export default function DesignDetailPage() {
                         <span className="flex items-center gap-2 text-muted-foreground">
                           <Package className="w-4 h-4" /> Item Price
                         </span>
-                        <span className="font-semibold">
-                          {tshirt.price || "—"}
-                        </span>
+                        <span className="font-semibold">{displayPrice}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="flex items-center gap-2 text-muted-foreground">
                           <Truck className="w-4 h-4" /> Delivery Charge
                         </span>
                         <span className="font-semibold">
-                          {tshirt.deliveryCharge || "—"}
+                          {tshirt.deliveryCharge ? displayDelivery : "—"}
                         </span>
                       </div>
                       <Separator />
@@ -496,7 +458,9 @@ export default function DesignDetailPage() {
                         <span className="font-bold text-sm uppercase tracking-wider">
                           Total
                         </span>
-                        <span className="font-extrabold text-xl">{total}</span>
+                        <span className="font-extrabold text-xl">
+                          {displayTotal}
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -1,8 +1,96 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Menu, Settings, ShoppingBag, X } from "lucide-react";
+import {
+  ChevronDown,
+  Loader2,
+  Menu,
+  Settings,
+  ShoppingBag,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { type CurrencyCode, useCurrency } from "../context/CurrencyContext";
+
+const CURRENCY_OPTIONS: { code: CurrencyCode; label: string }[] = [
+  { code: "INR", label: "₹ INR" },
+  { code: "USD", label: "$ USD" },
+  { code: "GBP", label: "£ GBP" },
+  { code: "EUR", label: "€ EUR" },
+  { code: "AED", label: "د.إ AED" },
+];
+
+function CurrencySwitcher({ compact = false }: { compact?: boolean }) {
+  const { selectedCurrency, setCurrency, isLoadingRates, currencySymbols } =
+    useCurrency();
+  const [open, setOpen] = useState(false);
+
+  const currentLabel =
+    CURRENCY_OPTIONS.find((o) => o.code === selectedCurrency)?.label ??
+    `${currencySymbols[selectedCurrency]} ${selectedCurrency}`;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase border border-border rounded-lg px-2.5 py-1.5 hover:bg-secondary transition-colors ${compact ? "w-full justify-between" : ""}`}
+        aria-label="Switch currency"
+        data-ocid="header.currency_switcher"
+      >
+        {isLoadingRates ? (
+          <Loader2 className="w-3 h-3 animate-spin" />
+        ) : (
+          <span>{currentLabel}</span>
+        )}
+        <ChevronDown
+          className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Backdrop */}
+            <button
+              type="button"
+              className="fixed inset-0 z-40 cursor-default"
+              aria-label="Close dropdown"
+              onClick={() => setOpen(false)}
+              onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className={`absolute z-50 mt-1 min-w-[120px] bg-card border border-border rounded-xl shadow-lg overflow-hidden ${compact ? "left-0 right-0" : "right-0"}`}
+            >
+              {CURRENCY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.code}
+                  type="button"
+                  onClick={() => {
+                    setCurrency(opt.code);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-xs font-bold tracking-wider uppercase hover:bg-secondary transition-colors ${
+                    selectedCurrency === opt.code
+                      ? "text-foreground bg-secondary/60"
+                      : "text-muted-foreground"
+                  }`}
+                  data-ocid={`currency.option.${opt.code.toLowerCase()}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function Header() {
   const location = useLocation();
@@ -22,7 +110,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           <Link
             to="/"
             className={`text-sm font-bold tracking-wider uppercase transition-colors ${
@@ -75,6 +163,7 @@ export default function Header() {
             <Settings className="w-4 h-4" />
             Admin
           </Link>
+          <CurrencySwitcher />
         </nav>
 
         {/* Right: Cart + Mobile Menu */}
@@ -181,6 +270,13 @@ export default function Header() {
                 <Settings className="w-4 h-4" />
                 Admin
               </Link>
+              {/* Currency Switcher in mobile */}
+              <div className="px-3 py-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                  Currency
+                </p>
+                <CurrencySwitcher compact />
+              </div>
             </nav>
           </motion.div>
         )}

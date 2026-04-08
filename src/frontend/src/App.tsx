@@ -7,6 +7,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { CartProvider } from "./context/CartContext";
+import { CurrencyProvider } from "./context/CurrencyContext";
 import AdminPage from "./pages/AdminPage";
 import CartPage from "./pages/CartPage";
 import ContactPage from "./pages/ContactPage";
@@ -16,10 +17,12 @@ import PaymentPage from "./pages/PaymentPage";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <CartProvider>
-      <Outlet />
-      <Toaster />
-    </CartProvider>
+    <CurrencyProvider>
+      <CartProvider>
+        <Outlet />
+        <Toaster />
+      </CartProvider>
+    </CurrencyProvider>
   ),
 });
 

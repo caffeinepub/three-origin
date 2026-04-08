@@ -27,10 +27,13 @@ export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const idlService = IDL.Service({
   'addContact' : IDL.Func([Contact], [], []),
   'addTshirt' : IDL.Func([Tshirt], [], []),
+  'detectUserCurrency' : IDL.Func([IDL.Text], [IDL.Text], []),
   'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getContacts' : IDL.Func([], [IDL.Vec(Contact)], ['query']),
+  'getCurrencyRates' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
   'getPaymentQR' : IDL.Func([], [IDL.Vec(IDL.Nat8)], ['query']),
+  'getRatesCachedAt' : IDL.Func([], [IDL.Int], ['query']),
   'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -38,6 +41,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getWhatsappNumber' : IDL.Func([], [IDL.Text], ['query']),
+  'refreshExchangeRates' : IDL.Func([], [IDL.Text], []),
   'removeContact' : IDL.Func([IDL.Text], [], []),
   'removeTshirt' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
@@ -69,10 +73,13 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'addContact' : IDL.Func([Contact], [], []),
     'addTshirt' : IDL.Func([Tshirt], [], []),
+    'detectUserCurrency' : IDL.Func([IDL.Text], [IDL.Text], []),
     'getAllTshirts' : IDL.Func([], [IDL.Vec(Tshirt)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getContacts' : IDL.Func([], [IDL.Vec(Contact)], ['query']),
+    'getCurrencyRates' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getPaymentQR' : IDL.Func([], [IDL.Vec(IDL.Nat8)], ['query']),
+    'getRatesCachedAt' : IDL.Func([], [IDL.Int], ['query']),
     'getTshirt' : IDL.Func([IDL.Text], [Tshirt], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -80,6 +87,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getWhatsappNumber' : IDL.Func([], [IDL.Text], ['query']),
+    'refreshExchangeRates' : IDL.Func([], [IDL.Text], []),
     'removeContact' : IDL.Func([IDL.Text], [], []),
     'removeTshirt' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),

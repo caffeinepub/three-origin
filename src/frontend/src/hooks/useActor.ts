@@ -1,5 +1,5 @@
 import { useActor as useCaffeineActor } from "@caffeineai/core-infrastructure";
-import { type ExternalBlob, createActor } from "../backend";
+import { createActor } from "../backend";
 import type { BackendActor } from "../types";
 
 // createActorFunction<T> from core-infrastructure uses ExternalBlob from @caffeineai/object-storage.

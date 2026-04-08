@@ -109,13 +109,17 @@ export interface UserProfile {
 export interface backendInterface {
     addContact(contact: Contact): Promise<void>;
     addTshirt(tshirt: Tshirt): Promise<void>;
+    detectUserCurrency(userIp: string): Promise<string>;
     getAllTshirts(): Promise<Array<Tshirt>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getContacts(): Promise<Array<Contact>>;
+    getCurrencyRates(): Promise<string | null>;
     getPaymentQR(): Promise<Uint8Array>;
+    getRatesCachedAt(): Promise<bigint>;
     getTshirt(name: string): Promise<Tshirt>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWhatsappNumber(): Promise<string>;
+    refreshExchangeRates(): Promise<string>;
     removeContact(contactLabel: string): Promise<void>;
     removeTshirt(name: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
@@ -152,6 +156,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addTshirt(arg0);
+            return result;
+        }
+    }
+    async detectUserCurrency(arg0: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.detectUserCurrency(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.detectUserCurrency(arg0);
             return result;
         }
     }
@@ -197,6 +215,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getCurrencyRates(): Promise<string | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCurrencyRates();
+                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCurrencyRates();
+            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getPaymentQR(): Promise<Uint8Array> {
         if (this.processError) {
             try {
@@ -208,6 +240,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getPaymentQR();
+            return result;
+        }
+    }
+    async getRatesCachedAt(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRatesCachedAt();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRatesCachedAt();
             return result;
         }
     }
@@ -250,6 +296,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getWhatsappNumber();
+            return result;
+        }
+    }
+    async refreshExchangeRates(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.refreshExchangeRates();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.refreshExchangeRates();
             return result;
         }
     }
@@ -353,6 +413,9 @@ export class Backend implements backendInterface {
     }
 }
 function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
 export interface CreateActorOptions {

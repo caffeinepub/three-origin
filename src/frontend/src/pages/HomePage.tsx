@@ -5,6 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
 import Header from "../components/Header";
+import { parseInrPrice, useCurrency } from "../context/CurrencyContext";
 import { useAllTshirts } from "../hooks/useQueries";
 
 const FALLBACK_TSHIRTS = [
@@ -66,7 +67,9 @@ function ProductCard({
   index: number;
 }) {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const isOutOfStock = Number(stock) === 0;
+  const displayPrice = formatPrice(parseInrPrice(price));
 
   return (
     <motion.div
@@ -120,7 +123,7 @@ function ProductCard({
             {name}
           </h3>
           <span className="font-extrabold text-sm text-foreground shrink-0">
-            {price}
+            {displayPrice}
           </span>
         </div>
         <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">

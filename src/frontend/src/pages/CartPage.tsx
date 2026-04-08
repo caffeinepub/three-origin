@@ -6,18 +6,22 @@ import { AnimatePresence, motion } from "motion/react";
 import { SiWhatsapp } from "react-icons/si";
 import Header from "../components/Header";
 import { useCart } from "../context/CartContext";
+import { parseInrPrice, useCurrency } from "../context/CurrencyContext";
 import { useWhatsappNumber } from "../hooks/useQueries";
-
-const FALLBACK_NUMBER = "919876543210";
 
 export default function CartPage() {
   const { items, cartTotal, removeFromCart, updateQuantity } = useCart();
   const { data: rawNumber } = useWhatsappNumber();
-  const whatsappNumber =
-    (rawNumber ?? FALLBACK_NUMBER).replace(/\D/g, "") || FALLBACK_NUMBER;
+  const { formatPrice } = useCurrency();
 
-  function buildCartWhatsapp() {
-    if (items.length === 0) return "#";
+  function handleOrderWhatsApp() {
+    if (items.length === 0) return;
+
+    const clean = (rawNumber ?? "").replace(/\D/g, "");
+    if (!clean) {
+      alert("WhatsApp number not set. Please contact admin.");
+      return;
+    }
 
     const lines = items
       .map((item) => {
@@ -26,10 +30,9 @@ export default function CartPage() {
           : "";
         return `Product: ${item.name}\nPrice: ${item.price}\nSize: ${item.selectedSize}${colorLine}\nQuantity: ${item.quantity}`;
       })
-      .join("\n\n---\n\n");
+      .join("\n\n");
 
-    const msg = encodeURIComponent(lines);
-    return `https://wa.me/${whatsappNumber}?text=${msg}`;
+    window.location.href = `https://wa.me/${clean}?text=${encodeURIComponent(lines)}`;
   }
 
   const isEmpty = items.length === 0;
@@ -94,106 +97,109 @@ export default function CartPage() {
                 {/* Items List */}
                 <div className="lg:col-span-2 space-y-4" data-ocid="cart.list">
                   <AnimatePresence>
-                    {items.map((item, i) => (
-                      <motion.div
-                        key={`${item.name}-${item.selectedSize}-${item.selectedColor ?? ""}`}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 16, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex gap-4 p-4 border border-border rounded-xl bg-card"
-                        data-ocid={`cart.item.${i + 1}`}
-                      >
-                        {/* Image */}
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-muted">
-                          {item.imageKey && (
-                            <img
-                              src={item.imageKey}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h3 className="font-display font-bold text-sm uppercase tracking-wide">
-                                {item.name}
-                              </h3>
-                              <p className="text-muted-foreground text-xs mt-0.5">
-                                Size: {item.selectedSize}
-                                {item.selectedColor
-                                  ? ` | Color: ${item.selectedColor}`
-                                  : ""}
-                              </p>
-                            </div>
-                            <span className="font-bold text-sm shrink-0">
-                              {item.price}
-                            </span>
+                    {items.map((item, i) => {
+                      const itemPrice = formatPrice(parseInrPrice(item.price));
+                      return (
+                        <motion.div
+                          key={`${item.name}-${item.selectedSize}-${item.selectedColor ?? ""}`}
+                          initial={{ opacity: 0, x: -16 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 16, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex gap-4 p-4 border border-border rounded-xl bg-card"
+                          data-ocid={`cart.item.${i + 1}`}
+                        >
+                          {/* Image */}
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-muted">
+                            {item.imageKey && (
+                              <img
+                                src={item.imageKey}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
 
-                          <div className="flex items-center justify-between mt-4">
-                            {/* Qty Controls */}
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.name,
-                                    item.selectedSize,
-                                    item.quantity - 1,
-                                    item.selectedColor,
-                                  )
-                                }
-                                className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
-                                aria-label="Decrease"
-                                data-ocid="cart.secondary_button"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <span className="w-8 text-center text-sm font-semibold">
-                                {item.quantity}
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="font-display font-bold text-sm uppercase tracking-wide">
+                                  {item.name}
+                                </h3>
+                                <p className="text-muted-foreground text-xs mt-0.5">
+                                  Size: {item.selectedSize}
+                                  {item.selectedColor
+                                    ? ` | Color: ${item.selectedColor}`
+                                    : ""}
+                                </p>
+                              </div>
+                              <span className="font-bold text-sm shrink-0">
+                                {itemPrice}
                               </span>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-4">
+                              {/* Qty Controls */}
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateQuantity(
+                                      item.name,
+                                      item.selectedSize,
+                                      item.quantity - 1,
+                                      item.selectedColor,
+                                    )
+                                  }
+                                  className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
+                                  aria-label="Decrease"
+                                  data-ocid="cart.secondary_button"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center text-sm font-semibold">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateQuantity(
+                                      item.name,
+                                      item.selectedSize,
+                                      item.quantity + 1,
+                                      item.selectedColor,
+                                    )
+                                  }
+                                  className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
+                                  aria-label="Increase"
+                                  data-ocid="cart.secondary_button"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              {/* Remove */}
                               <button
                                 type="button"
                                 onClick={() =>
-                                  updateQuantity(
+                                  removeFromCart(
                                     item.name,
                                     item.selectedSize,
-                                    item.quantity + 1,
                                     item.selectedColor,
                                   )
                                 }
-                                className="w-7 h-7 border border-border rounded-md flex items-center justify-center hover:bg-secondary transition-colors"
-                                aria-label="Increase"
-                                data-ocid="cart.secondary_button"
+                                className="text-muted-foreground hover:text-destructive transition-colors"
+                                aria-label="Remove item"
+                                data-ocid="cart.delete_button"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-
-                            {/* Remove */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeFromCart(
-                                  item.name,
-                                  item.selectedSize,
-                                  item.selectedColor,
-                                )
-                              }
-                              className="text-muted-foreground hover:text-destructive transition-colors"
-                              aria-label="Remove item"
-                              data-ocid="cart.delete_button"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
 
@@ -210,11 +216,11 @@ export default function CartPage() {
                     <div className="space-y-3 mb-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Subtotal ({items.reduce((s, i) => s + i.quantity, 0)}{" "}
-                          items)
+                          Subtotal (
+                          {items.reduce((s, it) => s + it.quantity, 0)} items)
                         </span>
                         <span className="font-semibold">
-                          ₹{cartTotal.toFixed(0)}
+                          {formatPrice(cartTotal)}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
@@ -232,17 +238,14 @@ export default function CartPage() {
                       location.
                     </p>
 
-                    <a
-                      href={buildCartWhatsapp()}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Button
+                      onClick={handleOrderWhatsApp}
+                      className="w-full h-12 rounded-full font-bold tracking-wider uppercase text-sm bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 flex items-center gap-2"
                       data-ocid="cart.primary_button"
                     >
-                      <Button className="w-full h-12 rounded-full font-bold tracking-wider uppercase text-sm bg-[#25D366] hover:bg-[#1ebe5d] text-white border-0 flex items-center gap-2">
-                        <SiWhatsapp className="w-4 h-4" />
-                        Order via WhatsApp
-                      </Button>
-                    </a>
+                      <SiWhatsapp className="w-4 h-4" />
+                      Order via WhatsApp
+                    </Button>
                   </div>
                 </div>
               </motion.div>

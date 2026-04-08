@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalBlob } from "../backend";
 import type { Contact, Tshirt } from "../types";
 import { useActor } from "./useActor";
 
@@ -54,8 +53,13 @@ export function usePaymentQR() {
     queryFn: async () => {
       if (!actor) return "";
       try {
-        const blob = await actor.getPaymentQR();
-        return blob.getDirectURL();
+        const bytes = await actor.getPaymentQR();
+        // bytes is a Uint8Array — convert to a data URL so the <img> can render it
+        if (!bytes || bytes.length === 0) return "";
+        const blob = new Blob([bytes as unknown as ArrayBuffer], {
+          type: "image/png",
+        });
+        return URL.createObjectURL(blob);
       } catch {
         return "";
       }
@@ -163,9 +167,53 @@ export function useSetPaymentQR() {
         throw new Error(
           "Backend not ready — please wait a moment and try again",
         );
-      const blob = ExternalBlob.fromBytes(bytes);
-      return actor.setPaymentQR(blob);
+      // Backend takes raw Uint8Array directly — no ExternalBlob wrapping needed
+      return actor.setPaymentQR(bytes);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentQR"] }),
+  });
+}
+
+export function useGetCurrencyRates() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string | null>({
+    queryKey: ["currencyRates"],
+    queryFn: async (): Promise<string | null> => {
+      if (!actor) return null;
+      try {
+        // backend.ts unwraps the Candid opt and returns string | null directly
+        return await actor.getCurrencyRates();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1000 * 60 * 30, // 30 min
+  });
+}
+
+export function useRefreshExchangeRates() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Backend not ready");
+      return actor.refreshExchangeRates();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["currencyRates"] }),
+  });
+}
+
+export function useDetectUserCurrency() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (ip: string) => {
+      if (!actor) return "INR";
+      try {
+        return await actor.detectUserCurrency(ip);
+      } catch {
+        return "INR";
+      }
+    },
   });
 }
