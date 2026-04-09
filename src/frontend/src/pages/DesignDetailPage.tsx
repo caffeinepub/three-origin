@@ -164,8 +164,10 @@ export default function DesignDetailPage() {
     }
 
     const colorLine = selectedColor ? `\nColour: ${selectedColor}` : "";
+    const dc = tshirt.deliveryCharge;
+    const deliveryLine = !dc || dc === "0" ? "Free" : dc;
 
-    const message = `Product: ${tshirt.name}\nPrice: ${tshirt.price}\nSize: ${selectedSize}${colorLine}\nQuantity: ${quantity}`;
+    const message = `Product: ${tshirt.name}\nPrice: ${tshirt.price}\nDelivery Charge: ${deliveryLine}\nSize: ${selectedSize}${colorLine}\nQuantity: ${quantity}`;
 
     const url = `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");

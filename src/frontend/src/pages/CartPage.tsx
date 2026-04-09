@@ -28,7 +28,9 @@ export default function CartPage() {
         const colorLine = item.selectedColor
           ? `\nColour: ${item.selectedColor}`
           : "";
-        return `Product: ${item.name}\nPrice: ${item.price}\nSize: ${item.selectedSize}${colorLine}\nQuantity: ${item.quantity}`;
+        const dc = item.deliveryCharge;
+        const deliveryLine = !dc || dc === "0" ? "Free" : dc;
+        return `Product: ${item.name}\nPrice: ${item.price}\nDelivery Charge: ${deliveryLine}\nSize: ${item.selectedSize}${colorLine}\nQuantity: ${item.quantity}`;
       })
       .join("\n\n");
 

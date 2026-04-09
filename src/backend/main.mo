@@ -5,9 +5,9 @@ import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 import Blob "mo:core/Blob";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
 
   // ── Types ─────────────────────────────────────────────────────────────────
