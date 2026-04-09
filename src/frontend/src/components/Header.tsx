@@ -98,12 +98,15 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+    <header
+      className="sticky top-0 z-50 border-b border-primary/20 bg-background/95 backdrop-blur-sm"
+      style={{ boxShadow: "0 1px 20px oklch(0.60 0.20 200 / 0.08)" }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link
           to="/"
-          className="font-display font-black text-lg sm:text-xl tracking-[0.2em] uppercase text-foreground hover:opacity-80 transition-opacity"
+          className="font-display font-black text-lg sm:text-xl tracking-[0.2em] uppercase neon-cyan hover:opacity-80 transition-opacity"
           data-ocid="header.link"
         >
           THREE ORIGIN
@@ -115,7 +118,7 @@ export default function Header() {
             to="/"
             className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/"
-                ? "text-foreground"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             data-ocid="nav.home.link"
@@ -124,7 +127,7 @@ export default function Header() {
           </Link>
           <a
             href="/#shop"
-            className="text-sm font-bold tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm font-bold tracking-wider uppercase text-muted-foreground hover:text-primary transition-colors"
             data-ocid="nav.shop.link"
           >
             Shop
@@ -133,7 +136,7 @@ export default function Header() {
             to="/cart"
             className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/cart"
-                ? "text-foreground"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             data-ocid="nav.cart.link"
@@ -144,7 +147,7 @@ export default function Header() {
             to="/contact"
             className={`text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/contact"
-                ? "text-foreground"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             data-ocid="nav.contact.link"
@@ -155,7 +158,7 @@ export default function Header() {
             to="/admin"
             className={`flex items-center gap-1.5 text-sm font-bold tracking-wider uppercase transition-colors ${
               location.pathname === "/admin"
-                ? "text-foreground"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             data-ocid="nav.admin.link"
@@ -177,7 +180,10 @@ export default function Header() {
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">
+              <span
+                className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-black flex items-center justify-center"
+                style={{ boxShadow: "0 0 8px oklch(0.55 0.22 315 / 0.7)" }}
+              >
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
@@ -215,7 +221,7 @@ export default function Header() {
                 to="/"
                 className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/"
-                    ? "text-foreground bg-secondary"
+                    ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
                 onClick={() => setMenuOpen(false)}
@@ -237,7 +243,7 @@ export default function Header() {
                 to="/cart"
                 className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/cart"
-                    ? "text-foreground bg-secondary"
+                    ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
                 onClick={() => setMenuOpen(false)}
@@ -249,7 +255,7 @@ export default function Header() {
                 to="/contact"
                 className={`px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/contact"
-                    ? "text-foreground bg-secondary"
+                    ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
                 onClick={() => setMenuOpen(false)}
@@ -261,7 +267,7 @@ export default function Header() {
                 to="/admin"
                 className={`flex items-center gap-2 px-3 py-2.5 text-sm font-bold tracking-wider uppercase rounded-md transition-colors ${
                   location.pathname === "/admin"
-                    ? "text-foreground bg-secondary"
+                    ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
                 onClick={() => setMenuOpen(false)}

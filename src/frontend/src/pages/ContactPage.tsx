@@ -18,11 +18,14 @@ export default function ContactPage() {
           transition={{ duration: 0.5 }}
           className="max-w-md w-full text-center"
         >
-          <div className="w-20 h-20 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center mx-auto mb-8">
+          <div
+            className="w-20 h-20 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 flex items-center justify-center mx-auto mb-8"
+            style={{ boxShadow: "0 0 24px rgba(37,211,102,0.15)" }}
+          >
             <MessageCircle className="w-9 h-9 text-[#25D366]" />
           </div>
 
-          <p className="text-muted-foreground text-xs tracking-[0.4em] uppercase mb-3">
+          <p className="text-primary text-xs tracking-[0.4em] uppercase mb-3 neon-cyan">
             Three Origin
           </p>
           <h1 className="font-display font-extrabold text-4xl uppercase tracking-tight mb-4">

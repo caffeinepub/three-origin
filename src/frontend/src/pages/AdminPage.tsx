@@ -92,7 +92,7 @@ function PasswordGate({ onAuth }: { onAuth: () => void }) {
           transition={{ duration: 0.5 }}
           className="text-center max-w-sm w-full"
         >
-          <p className="text-muted-foreground text-xs tracking-[0.3em] uppercase mb-4">
+          <p className="text-primary text-xs tracking-[0.3em] uppercase mb-4 neon-cyan">
             Admin Access
           </p>
           <h1 className="font-display font-extrabold text-4xl uppercase tracking-tight mb-8">
@@ -146,14 +146,19 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <p className="text-muted-foreground text-xs tracking-[0.3em] uppercase mb-1">
+                <p className="text-primary text-xs tracking-[0.3em] uppercase mb-1 neon-cyan">
                   Admin Panel
                 </p>
                 <h1 className="font-display font-extrabold text-2xl uppercase tracking-tight">
                   Three Origin
                 </h1>
               </div>
-              <Button variant="outline" size="sm" onClick={onLogout}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onLogout}
+                className="border-primary/30 text-primary hover:bg-primary/10"
+              >
                 Logout
               </Button>
             </div>
@@ -571,8 +576,8 @@ function TshirtRow({
             <span
               className={
                 Number(tshirt.stock ?? 0) === 0
-                  ? "text-red-400 font-semibold"
-                  : "text-green-400 font-semibold"
+                  ? "text-destructive font-semibold"
+                  : "text-accent font-semibold"
               }
             >
               {Number(tshirt.stock ?? 0)} units

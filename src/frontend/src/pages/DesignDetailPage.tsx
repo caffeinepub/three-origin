@@ -248,7 +248,9 @@ export default function DesignDetailPage() {
                     {tshirt.name}
                   </h1>
                   <div className="flex items-baseline gap-3 mb-1">
-                    <span className="font-bold text-2xl">{displayPrice}</span>
+                    <span className="font-bold text-2xl text-primary">
+                      {displayPrice}
+                    </span>
                     {tshirt.deliveryCharge && (
                       <span className="text-muted-foreground text-sm">
                         + {displayDelivery} delivery
@@ -304,10 +306,10 @@ export default function DesignDetailPage() {
                         onClick={() =>
                           setSelectedSize(selectedSize === size ? "" : size)
                         }
-                        className={`w-12 h-12 border rounded-lg text-sm font-semibold transition-all ${
+                        className={`w-12 h-12 border rounded-lg text-sm font-semibold transition-all duration-200 ${
                           selectedSize === size
-                            ? "border-foreground bg-foreground text-background shadow-md"
-                            : "border-border bg-transparent text-foreground hover:border-foreground/60"
+                            ? "border-primary bg-primary/15 text-primary shadow-md"
+                            : "border-border bg-transparent text-foreground hover:border-primary/60 hover:text-primary"
                         }`}
                         data-ocid="design_detail.toggle"
                         aria-pressed={selectedSize === size}
@@ -324,7 +326,7 @@ export default function DesignDetailPage() {
                     <p className="text-xs tracking-[0.25em] uppercase text-muted-foreground mb-3">
                       Select Color
                       {selectedColor && (
-                        <span className="ml-2 normal-case tracking-normal text-foreground font-semibold">
+                        <span className="ml-2 normal-case tracking-normal text-secondary font-semibold">
                           — {selectedColor}
                         </span>
                       )}
@@ -339,10 +341,10 @@ export default function DesignDetailPage() {
                               selectedColor === color ? null : color,
                             )
                           }
-                          className={`px-4 h-10 border rounded-lg text-sm font-semibold transition-all ${
+                          className={`px-4 h-10 border rounded-lg text-sm font-semibold transition-all duration-200 ${
                             selectedColor === color
-                              ? "border-foreground bg-foreground text-background shadow-md"
-                              : "border-border bg-transparent text-foreground hover:border-foreground/60"
+                              ? "border-secondary bg-secondary/15 text-secondary shadow-md"
+                              : "border-border bg-transparent text-foreground hover:border-secondary/60 hover:text-secondary"
                           }`}
                           data-ocid="design_detail.toggle"
                           aria-pressed={selectedColor === color}
@@ -398,7 +400,7 @@ export default function DesignDetailPage() {
                     <Button
                       variant="outline"
                       onClick={handleAddToCart}
-                      className="flex-1 h-12 text-sm font-bold tracking-wider uppercase rounded-full flex items-center gap-2"
+                      className="flex-1 h-12 text-sm font-bold tracking-wider uppercase rounded-full flex items-center gap-2 border-primary/40 text-primary hover:bg-primary/10 hover-glow-cyan transition-all"
                       data-ocid="design_detail.secondary_button"
                     >
                       <ShoppingBag className="w-4 h-4" />

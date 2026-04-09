@@ -77,7 +77,7 @@ function ProductCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: (index % 4) * 0.08 }}
-      className="group cursor-pointer"
+      className="group cursor-pointer card-neon-border rounded-xl p-0"
       onClick={() =>
         navigate({
           to: "/design/$name",
@@ -109,8 +109,8 @@ function ProductCard({
           </div>
         )}
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100">
-          <span className="bg-background text-foreground text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-full flex items-center gap-2">
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-primary/10 transition-colors duration-300 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100">
+          <span className="bg-primary text-primary-foreground text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-full flex items-center gap-2">
             View Product <ArrowRight className="w-3 h-3" />
           </span>
         </div>
@@ -133,7 +133,7 @@ function ProductCard({
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs font-bold tracking-wider uppercase h-8"
+            className="w-full text-xs font-bold tracking-wider uppercase h-8 border-primary/40 text-primary hover:bg-primary/10"
             tabIndex={-1}
           >
             View Product
@@ -168,7 +168,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-amber-300/80 text-xs font-bold tracking-[0.4em] uppercase mb-4"
+              className="text-primary text-xs font-bold tracking-[0.4em] uppercase mb-4 neon-cyan"
             >
               Collection 2026
             </motion.p>
@@ -199,7 +199,7 @@ export default function HomePage() {
             >
               <a
                 href="#shop"
-                className="inline-flex items-center justify-center gap-2 bg-amber-500 text-black font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-amber-400 transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover-glow-cyan transition-colors"
                 data-ocid="hero.primary_button"
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -207,7 +207,7 @@ export default function HomePage() {
               </a>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 border border-amber-400/50 text-amber-200 font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-amber-400/10 transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-secondary/60 text-secondary font-bold text-sm tracking-wider uppercase px-8 py-3.5 rounded-full hover:bg-secondary/10 hover-glow-magenta transition-colors"
                 data-ocid="hero.secondary_button"
               >
                 Contact Us
@@ -222,7 +222,7 @@ export default function HomePage() {
             transition={{ delay: 1 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
-            <div className="w-px h-12 bg-gradient-to-b from-amber-400/40 to-transparent mx-auto" />
+            <div className="w-px h-12 bg-gradient-to-b from-primary/60 to-transparent mx-auto" />
           </motion.div>
         </section>
 

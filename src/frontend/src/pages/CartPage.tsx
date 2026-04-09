@@ -81,7 +81,7 @@ export default function CartPage() {
                 </p>
                 <Link to="/">
                   <Button
-                    className="rounded-full px-8 tracking-wider uppercase text-sm"
+                    className="rounded-full px-8 tracking-wider uppercase text-sm hover-glow-cyan"
                     data-ocid="cart.primary_button"
                   >
                     Continue Shopping
@@ -109,7 +109,7 @@ export default function CartPage() {
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 16, height: 0 }}
                           transition={{ duration: 0.3 }}
-                          className="flex gap-4 p-4 border border-border rounded-xl bg-card"
+                          className="flex gap-4 p-4 border border-border rounded-xl bg-card card-neon-border"
                           data-ocid={`cart.item.${i + 1}`}
                         >
                           {/* Image */}
@@ -137,7 +137,7 @@ export default function CartPage() {
                                     : ""}
                                 </p>
                               </div>
-                              <span className="font-bold text-sm shrink-0">
+                              <span className="font-bold text-sm shrink-0 text-primary">
                                 {itemPrice}
                               </span>
                             </div>
